@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soil Contamination Simulator (Cd)</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Soil Contamination Simulator (Cd)</h1>
+      <p>Explore how pH, texture, organic matter, and water control contaminant mobility.</p>
+    </header>
+
+    <main class="layout">
+      <aside class="panel controls">
+        <h2>Controls</h2>
+        <section>
+          <h3>Soil</h3>
+          <label title="Particle composition affects sorption and flow.">Texture
+            <select id="texture">
+              <option>Sandy</option>
+              <option selected>Loam</option>
+              <option>Clay</option>
+            </select>
+          </label>
+          <label title="More organic matter usually binds more Cd.">Organic Matter (%) <span id="organicMatterVal"></span>
+            <input type="range" id="organicMatter" min="0" max="10" step="0.5" value="3" />
+          </label>
+          <label title="Lower pH increases Cd solubility.">pH <span id="pHVal"></span>
+            <input type="range" id="pH" min="4" max="8.5" step="0.1" value="5.5" />
+          </label>
+          <label title="Cation exchange capacity influences adsorption.">CEC (cmol(+)/kg)
+            <input type="number" id="cec" disabled />
+          </label>
+          <label class="toggle"><input type="checkbox" id="advancedCEC" /> Advanced Mode (manual CEC)</label>
+        </section>
+
+        <section>
+          <h3>Hydrology</h3>
+          <label title="Weekly water input driving percolation.">Rainfall/Irrigation (mm/week) <span id="rainfallVal"></span>
+            <input type="range" id="rainfall" min="0" max="120" step="5" value="40" />
+          </label>
+          <label title="Higher permeability can increase downward transport.">Permeability
+            <select id="permeability">
+              <option>Low</option>
+              <option selected>Medium</option>
+              <option>High</option>
+            </select>
+          </label>
+          <label title="Shallow groundwater is more vulnerable.">Groundwater depth (m) <span id="groundwaterDepthVal"></span>
+            <input type="range" id="groundwaterDepth" min="0.5" max="10" step="0.5" value="3" />
+          </label>
+        </section>
+
+        <section>
+          <h3>Contamination</h3>
+          <label title="Initial Cd concentration in contaminated zone.">Initial concentration (mg/kg) <span id="initialConcentrationVal"></span>
+            <input type="range" id="initialConcentration" min="0" max="200" step="5" value="60" />
+          </label>
+          <label title="Depth of contaminated soil affects transfer to deeper layers.">Contaminated depth
+            <select id="contaminatedDepth">
+              <option value="0-20" selected>0–20 cm</option>
+              <option value="0-40">0–40 cm</option>
+            </select>
+          </label>
+        </section>
+
+        <section>
+          <h3>Interventions</h3>
+          <label>Intervention
+            <select id="intervention">
+              <option value="None" selected>None</option>
+              <option value="Lime">Lime</option>
+              <option value="BiocharCompost">Biochar/Compost</option>
+              <option value="VegetativeCover">Vegetative cover</option>
+            </select>
+          </label>
+          <label id="limeDoseWrap" class="conditional">Lime dose <span id="limeDoseVal"></span>
+            <input type="range" id="limeDose" min="0" max="5" step="0.5" value="0" />
+          </label>
+          <label id="biocharDoseWrap" class="conditional">Biochar/Compost dose <span id="biocharDoseVal"></span>
+            <input type="range" id="biocharDose" min="0" max="5" step="0.5" value="0" />
+          </label>
+        </section>
+
+        <div class="buttons">
+          <button id="runBtn">Run Simulation</button>
+          <button id="stepBtn">Step Forward</button>
+          <button id="resetBtn">Reset</button>
+          <button id="exportBtn">Export Results</button>
+        </div>
+      </aside>
+
+      <section class="panel viz">
+        <h2>2D Soil Visualization</h2>
+        <canvas id="soilCanvas" width="460" height="520"></canvas>
+      </section>
+
+      <aside class="panel results">
+        <h2>Results</h2>
+        <div class="indicators">
+          <div class="indicator" id="mobilityIndicator">Mobility: <strong>-</strong></div>
+          <div class="indicator" id="bioIndicator">Bioavailability: <strong>-</strong></div>
+          <div class="indicator" id="gwIndicator">Groundwater Risk: <strong>-</strong></div>
+        </div>
+
+        <canvas id="concChart"></canvas>
+        <canvas id="fractionChart"></canvas>
+
+        <div class="explanation">
+          <h3>Auto-Explanation</h3>
+          <ul id="explanationList"></ul>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
