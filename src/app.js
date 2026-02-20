@@ -1,6 +1,97 @@
 import { DEFAULTS } from './constants.js';
 import { explainChanges, getIndicators, getValidatedParams, initialState, runSimulation, simulateWeek } from './model.js';
 
+const i18n = {
+  en: {
+    appTitle: 'Soil Contamination Simulator (Cd)',
+    appSubtitle: 'Explore how pH, texture, organic matter, and water control contaminant mobility.',
+    controlsTitle: 'Controls',
+    spanishToggleLabel: 'Spanish',
+    soilGroupTitle: 'Soil',
+    textureLabel: 'Texture',
+    organicMatterLabel: 'Organic Matter (%)',
+    pHLabel: 'pH',
+    cecLabel: 'CEC (cmol(+)/kg)',
+    advancedModeLabel: 'Advanced Mode (manual CEC)',
+    hydrologyGroupTitle: 'Hydrology',
+    rainfallLabel: 'Rainfall/Irrigation (mm/week)',
+    permeabilityLabel: 'Permeability',
+    groundwaterDepthLabel: 'Groundwater depth (m)',
+    contaminationGroupTitle: 'Contamination',
+    initialConcentrationLabel: 'Initial concentration (mg/kg)',
+    contaminatedDepthLabel: 'Contaminated depth',
+    interventionsGroupTitle: 'Interventions',
+    interventionLabel: 'Intervention',
+    limeDoseLabel: 'Lime dose',
+    biocharDoseLabel: 'Biochar/Compost dose',
+    runBtn: 'Run Simulation',
+    stepBtn: 'Step Forward',
+    resetBtn: 'Reset',
+    exportBtn: 'Export Results',
+    vizTitle: '2D Soil Visualization',
+    resultsTitle: 'Results',
+    mobilityText: 'Mobility',
+    bioavailabilityText: 'Bioavailability',
+    groundwaterRiskText: 'Groundwater Risk',
+    explanationTitle: 'Auto-Explanation',
+    levels: { low: 'Low', medium: 'Medium', high: 'High' },
+    concSurface: 'Surface concentration (mg/kg)',
+    concDeep: 'Deep concentration (mg/kg)',
+    fracDis: 'Dissolved %',
+    fracAds: 'Adsorbed %',
+    fracImm: 'Immobilized %',
+    groundwaterLabel: 'Groundwater',
+    week: 'Week',
+    surfaceCd: 'Surface Cd',
+    deepCd: 'Deep Cd',
+  },
+  es: {
+    appTitle: 'Simulador de Contaminación del Suelo (Cd)',
+    appSubtitle: 'Explora cómo el pH, la textura, la materia orgánica y el agua controlan la movilidad del contaminante.',
+    controlsTitle: 'Controles',
+    spanishToggleLabel: 'Español',
+    soilGroupTitle: 'Suelo',
+    textureLabel: 'Textura',
+    organicMatterLabel: 'Materia orgánica (%)',
+    pHLabel: 'pH',
+    cecLabel: 'CIC (cmol(+)/kg)',
+    advancedModeLabel: 'Modo avanzado (CIC manual)',
+    hydrologyGroupTitle: 'Hidrología',
+    rainfallLabel: 'Lluvia/Riego (mm/semana)',
+    permeabilityLabel: 'Permeabilidad',
+    groundwaterDepthLabel: 'Profundidad del agua subterránea (m)',
+    contaminationGroupTitle: 'Contaminación',
+    initialConcentrationLabel: 'Concentración inicial (mg/kg)',
+    contaminatedDepthLabel: 'Profundidad contaminada',
+    interventionsGroupTitle: 'Intervenciones',
+    interventionLabel: 'Intervención',
+    limeDoseLabel: 'Dosis de cal',
+    biocharDoseLabel: 'Dosis de biochar/compost',
+    runBtn: 'Ejecutar simulación',
+    stepBtn: 'Avanzar 1 semana',
+    resetBtn: 'Reiniciar',
+    exportBtn: 'Exportar resultados',
+    vizTitle: 'Visualización 2D del suelo',
+    resultsTitle: 'Resultados',
+    mobilityText: 'Movilidad',
+    bioavailabilityText: 'Bioaccesibilidad',
+    groundwaterRiskText: 'Riesgo de agua subterránea',
+    explanationTitle: 'Autoexplicación',
+    levels: { low: 'Bajo', medium: 'Medio', high: 'Alto' },
+    concSurface: 'Concentración superficial (mg/kg)',
+    concDeep: 'Concentración profunda (mg/kg)',
+    fracDis: 'Disuelto %',
+    fracAds: 'Adsorbido %',
+    fracImm: 'Inmovilizado %',
+    groundwaterLabel: 'Agua subterránea',
+    week: 'Semana',
+    surfaceCd: 'Cd superficial',
+    deepCd: 'Cd profundo',
+  },
+};
+
+let language = 'en';
+
 const ids = [
   'texture', 'organicMatter', 'pH', 'cec', 'advancedCEC', 'rainfall', 'permeability', 'groundwaterDepth',
   'initialConcentration', 'contaminatedDepth', 'intervention', 'limeDose', 'biocharDose',
@@ -22,20 +113,51 @@ const soil = soilCanvas.getContext('2d');
 const concChart = new Chart(concCtx, {
   type: 'line',
   data: { labels: [0], datasets: [
-    { label: 'Surface concentration (mg/kg)', data: [currentParams.initialConcentration], borderColor: '#1f77b4' },
-    { label: 'Deep concentration (mg/kg)', data: [currentParams.initialConcentration * 0.05], borderColor: '#d62728' },
+    { label: i18n.en.concSurface, data: [currentParams.initialConcentration], borderColor: '#1f77b4' },
+    { label: i18n.en.concDeep, data: [currentParams.initialConcentration * 0.05], borderColor: '#d62728' },
   ] },
 });
 
 const fractionChart = new Chart(fractionCtx, {
   type: 'bar',
   data: { labels: [0], datasets: [
-    { label: 'Dissolved %', data: [states[0].fractions.dissolved * 100], backgroundColor: '#6baed6', stack: 'frac' },
-    { label: 'Adsorbed %', data: [states[0].fractions.adsorbed * 100], backgroundColor: '#74c476', stack: 'frac' },
-    { label: 'Immobilized %', data: [states[0].fractions.immobilized * 100], backgroundColor: '#fd8d3c', stack: 'frac' },
+    { label: i18n.en.fracDis, data: [states[0].fractions.dissolved * 100], backgroundColor: '#6baed6', stack: 'frac' },
+    { label: i18n.en.fracAds, data: [states[0].fractions.adsorbed * 100], backgroundColor: '#74c476', stack: 'frac' },
+    { label: i18n.en.fracImm, data: [states[0].fractions.immobilized * 100], backgroundColor: '#fd8d3c', stack: 'frac' },
   ] },
   options: { scales: { x: { stacked: true }, y: { stacked: true, max: 100 } } },
 });
+
+function localizeStaticText() {
+  const t = i18n[language];
+  Object.keys(t).forEach((key) => {
+    if (typeof t[key] !== 'string') return;
+    const node = document.getElementById(key);
+    if (node) node.textContent = t[key];
+  });
+
+  el.texture.options[0].text = language === 'es' ? 'Arenoso' : 'Sandy';
+  el.texture.options[1].text = language === 'es' ? 'Franco' : 'Loam';
+  el.texture.options[2].text = language === 'es' ? 'Arcilloso' : 'Clay';
+
+  el.permeability.options[0].text = language === 'es' ? 'Baja' : 'Low';
+  el.permeability.options[1].text = language === 'es' ? 'Media' : 'Medium';
+  el.permeability.options[2].text = language === 'es' ? 'Alta' : 'High';
+
+  el.contaminatedDepth.options[0].text = language === 'es' ? '0–20 cm' : '0–20 cm';
+  el.contaminatedDepth.options[1].text = language === 'es' ? '0–40 cm' : '0–40 cm';
+
+  el.intervention.options[0].text = language === 'es' ? 'Ninguna' : 'None';
+  el.intervention.options[1].text = language === 'es' ? 'Cal' : 'Lime';
+  el.intervention.options[2].text = 'Biochar/Compost';
+  el.intervention.options[3].text = language === 'es' ? 'Cobertura vegetal' : 'Vegetative cover';
+
+  concChart.data.datasets[0].label = t.concSurface;
+  concChart.data.datasets[1].label = t.concDeep;
+  fractionChart.data.datasets[0].label = t.fracDis;
+  fractionChart.data.datasets[1].label = t.fracAds;
+  fractionChart.data.datasets[2].label = t.fracImm;
+}
 
 function readControls() {
   return getValidatedParams({
@@ -66,11 +188,11 @@ function syncControlLabels(params) {
   document.getElementById('biocharDoseWrap').style.display = params.intervention === 'BiocharCompost' ? 'flex' : 'none';
 }
 
-function setIndicator(nodeId, label) {
+function setIndicator(nodeId, levelKey) {
   const node = document.getElementById(nodeId);
   node.classList.remove('low', 'medium', 'high');
-  node.classList.add(label.toLowerCase());
-  node.querySelector('strong').textContent = label;
+  node.classList.add(levelKey);
+  node.querySelector('strong').textContent = i18n[language].levels[levelKey];
 }
 
 function renderIndicators(state) {
@@ -97,12 +219,13 @@ function renderCharts() {
 function renderExplanation() {
   const curr = states[states.length - 1];
   const prev = states[states.length - 2] ?? curr;
-  const bullets = explainChanges(prev, curr, currentParams);
+  const bullets = explainChanges(prev, curr, currentParams, language);
   explanationList.innerHTML = bullets.map((text) => `<li>${text}</li>`).join('');
 }
 
 function drawSoil() {
   const state = states[states.length - 1];
+  const t = i18n[language];
   soil.clearRect(0, 0, soilCanvas.width, soilCanvas.height);
 
   const topY = 70;
@@ -131,7 +254,7 @@ function drawSoil() {
   soil.stroke();
   soil.setLineDash([]);
   soil.fillStyle = '#0055aa';
-  soil.fillText(`Groundwater (${currentParams.groundwaterDepth.toFixed(1)} m)`, 90, gwY - 8);
+  soil.fillText(`${t.groundwaterLabel} (${currentParams.groundwaterDepth.toFixed(1)} m)`, 90, gwY - 8);
 
   const arrowCount = Math.round((currentParams.rainfall / 120) * 7 + ({ Low: 1, Medium: 2, High: 3 }[currentParams.permeability] ?? 2));
   soil.strokeStyle = '#203040';
@@ -147,13 +270,14 @@ function drawSoil() {
   }
 
   soil.fillStyle = '#222';
-  soil.fillText(`Week ${state.week}`, 20, 25);
-  soil.fillText(`Surface Cd: ${state.surfaceConc.toFixed(1)} mg/kg`, 20, 42);
-  soil.fillText(`Deep Cd: ${state.deepConc.toFixed(1)} mg/kg`, 20, 58);
+  soil.fillText(`${t.week} ${state.week}`, 20, 25);
+  soil.fillText(`${t.surfaceCd}: ${state.surfaceConc.toFixed(1)} mg/kg`, 20, 42);
+  soil.fillText(`${t.deepCd}: ${state.deepConc.toFixed(1)} mg/kg`, 20, 58);
 }
 
 function refreshAll() {
   currentParams = readControls();
+  localizeStaticText();
   syncControlLabels(currentParams);
   renderIndicators(states[states.length - 1]);
   renderCharts();
@@ -167,6 +291,11 @@ ids.forEach((id) => {
     syncControlLabels(currentParams);
     drawSoil();
   });
+});
+
+document.getElementById('spanishToggle').addEventListener('change', (e) => {
+  language = e.target.checked ? 'es' : 'en';
+  refreshAll();
 });
 
 document.getElementById('runBtn').addEventListener('click', () => {
@@ -198,6 +327,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 
 document.getElementById('exportBtn').addEventListener('click', () => {
   const payload = {
+    language,
     parameters: currentParams,
     results: states,
   };

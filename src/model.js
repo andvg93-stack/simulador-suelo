@@ -92,9 +92,9 @@ export function simulateWeek(prev, params) {
 }
 
 function levelFromScore(score) {
-  if (score < 0.33) return 'Low';
-  if (score < 0.66) return 'Medium';
-  return 'High';
+  if (score < 0.33) return 'low';
+  if (score < 0.66) return 'medium';
+  return 'high';
 }
 
 export function getIndicators(state) {
@@ -128,28 +128,41 @@ export function runSimulation(rawParams) {
   return { params, states };
 }
 
-export function explainChanges(prev, current, params) {
+export function explainChanges(prev, current, params, language = 'en') {
+  const es = language === 'es';
   const bullets = [];
   if (current.week === 0) {
-    bullets.push('Week 0 baseline loaded. Adjust controls and run to explore outcomes.');
+    bullets.push(es ? 'Semana 0 cargada. Ajusta los controles y ejecuta para explorar resultados.' : 'Week 0 baseline loaded. Adjust controls and run to explore outcomes.');
     return bullets;
   }
   if (current.surfaceConc < prev.surfaceConc) {
-    bullets.push(`Surface concentration fell from ${prev.surfaceConc.toFixed(1)} to ${current.surfaceConc.toFixed(1)} mg/kg due to leaching and retention.`);
+    bullets.push(es
+      ? `La concentración superficial bajó de ${prev.surfaceConc.toFixed(1)} a ${current.surfaceConc.toFixed(1)} mg/kg por lixiviación y retención.`
+      : `Surface concentration fell from ${prev.surfaceConc.toFixed(1)} to ${current.surfaceConc.toFixed(1)} mg/kg due to leaching and retention.`);
   }
   if (current.deepConc > prev.deepConc) {
-    bullets.push(`Deep soil concentration increased to ${current.deepConc.toFixed(1)} mg/kg as dissolved Cd moved downward.`);
+    bullets.push(es
+      ? `La concentración profunda aumentó a ${current.deepConc.toFixed(1)} mg/kg porque el Cd disuelto se movió hacia abajo.`
+      : `Deep soil concentration increased to ${current.deepConc.toFixed(1)} mg/kg as dissolved Cd moved downward.`);
   }
   if (params.intervention === 'Lime') {
-    bullets.push(`Lime dose raised pH to ${current.pH.toFixed(2)}, which reduced dissolved Cd and mobility.`);
+    bullets.push(es
+      ? `La dosis de cal elevó el pH a ${current.pH.toFixed(2)}, reduciendo el Cd disuelto y la movilidad.`
+      : `Lime dose raised pH to ${current.pH.toFixed(2)}, which reduced dissolved Cd and mobility.`);
   }
   if (params.intervention === 'BiocharCompost') {
-    bullets.push('Biochar/compost increased adsorption capacity, shifting Cd from dissolved to adsorbed pools.');
+    bullets.push(es
+      ? 'Biochar/compost aumentó la capacidad de adsorción, moviendo Cd de la fase disuelta a la adsorbida.'
+      : 'Biochar/compost increased adsorption capacity, shifting Cd from dissolved to adsorbed pools.');
   }
   if (params.intervention === 'VegetativeCover') {
-    bullets.push('Vegetative cover reduces erosion risk, but leaching remains controlled mainly by water flow and permeability.');
+    bullets.push(es
+      ? 'La cobertura vegetal reduce la erosión superficial, pero la lixiviación depende sobre todo del flujo de agua y la permeabilidad.'
+      : 'Vegetative cover reduces erosion risk, but leaching remains controlled mainly by water flow and permeability.');
   }
-  bullets.push(`Trade-off: stronger immobilization lowers bioavailability but may leave a long-term residual contaminant stock in soil.`);
+  bullets.push(es
+    ? 'Compensación: mayor inmovilización reduce bioaccesibilidad, pero puede dejar una reserva residual de contaminante en el suelo.'
+    : 'Trade-off: stronger immobilization lowers bioavailability but may leave a long-term residual contaminant stock in soil.');
 
   return bullets.slice(0, 5);
 }

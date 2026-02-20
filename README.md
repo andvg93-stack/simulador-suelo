@@ -18,6 +18,7 @@ This starts a local static server; open http://localhost:5173 in your browser.
   - Center 2D conceptual soil profile
   - Right panel with indicators, charts, and auto-explanation
 - 12-week discrete simulation with:
+  - Language toggle checkbox (English/Spanish) that translates all UI text
   - **Run Simulation** (full run)
   - **Step Forward** (one week)
   - **Reset** (back to week 0 defaults)
