@@ -1,0 +1,112 @@
+:root {
+  font-family: Arial, sans-serif;
+  color: #24313d;
+  background: #f4f6f8;
+}
+
+body {
+  margin: 0;
+}
+
+header {
+  background: #144b6f;
+  color: #fff;
+  padding: 1rem 1.5rem;
+}
+
+header h1,
+header p {
+  margin: 0.25rem 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr minmax(320px, 420px);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.controls {
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.65rem;
+  font-size: 0.92rem;
+}
+
+h2, h3 {
+  margin-top: 0.3rem;
+}
+
+input[type='range'] {
+  width: 100%;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: #22699c;
+  color: white;
+  border-radius: 6px;
+  padding: 0.55rem;
+}
+
+button:hover {
+  background: #174a6f;
+}
+
+.conditional {
+  display: none;
+}
+
+.viz canvas {
+  width: 100%;
+  border: 1px solid #d5dde5;
+  border-radius: 8px;
+  background: #fafcfd;
+}
+
+.indicators {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.indicator {
+  padding: 0.45rem;
+  border-radius: 6px;
+  background: #eceff2;
+}
+
+.low { background: #9ad79d; }
+.medium { background: #f4d07b; }
+.high { background: #ef9898; }
+
+.explanation ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+@media (max-width: 1200px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
