@@ -1,0 +1,241 @@
+You are a coding agent. Build a complete, runnable browser-based web simulator for teaching Soil Physical Chemistry – Contamination Scenario (Cadmium, Cd²⁺).
+
+Deliverable
+
+A project that runs locally with a single command (or the simplest possible steps) and opens a web UI in the browser. The UI must match the layout and behaviors below.
+
+1) App Goal (Didactic Simulator)
+
+Students must be able to change soil/environment parameters and see how they affect:
+
+Mobility (leaching risk)
+
+Bioavailability (risk to plants/biota)
+
+Groundwater contamination risk
+
+Fraction distribution of contaminant:
+
+Dissolved
+
+Adsorbed
+
+Immobilized/precipitated
+
+The simulator runs over discrete time steps (weeks), default 12 weeks, and supports run all and step-by-step.
+
+2) Mandatory UI Layout (4 Zones)
+A) Header
+
+Title: “Soil Contamination Simulator (Cd)”
+
+Subtitle: “Explore how pH, texture, organic matter, and water control contaminant mobility.”
+
+B) Left Panel: Controls
+
+Group controls with labels and short tooltips.
+
+Group 1: Soil
+
+Texture: dropdown Sandy / Loam / Clay
+
+Organic Matter (%): slider 0–10, step 0.5
+
+pH: slider 4.0–8.5, step 0.1
+
+CEC: auto-calculated by default
+
+Toggle: Advanced Mode
+
+If Advanced Mode ON: allow manual numeric CEC input (validated)
+
+Group 2: Hydrology
+
+Rainfall/Irrigation (mm/week): slider 0–120, step 5
+
+Permeability: dropdown Low / Medium / High
+
+Groundwater depth (m): slider 0.5–10, step 0.5
+
+Group 3: Contamination
+
+Initial concentration (mg/kg): slider 0–200, step 5
+
+Contaminated depth: dropdown 0–20 cm / 0–40 cm
+
+Group 4: Interventions
+
+Selector (dropdown or radios):
+
+None
+
+Lime (raises pH) + dose slider 0–5
+
+Biochar/Compost (increases adsorption) + dose slider 0–5
+
+Vegetative cover (reduces erosion/surface transport; not leaching)
+
+Optional (nice-to-have): budget slider 0–100 and costs.
+
+Buttons
+
+Run Simulation (compute full 12 weeks)
+
+Step Forward (advance 1 week)
+
+Reset (restore defaults)
+
+Export Results (download JSON or CSV)
+
+C) Center Panel: 2D Soil Visualization
+
+A simple conceptual vertical profile:
+
+Two layers (contaminated zone + deeper zone)
+
+Groundwater line at chosen depth
+
+A plume/gradient indicating concentration (surface vs deep)
+
+Downward arrows for percolation (more arrows when rainfall/permeability are higher)
+
+Must update when parameters change and when time advances.
+
+D) Right Panel: Results
+Traffic-light indicators (color-coded)
+
+Mobility: Low/Medium/High
+
+Bioavailability: Low/Medium/High
+
+Groundwater Risk: Low/Medium/High
+
+Graphs
+
+Time series (weeks):
+
+Surface concentration (mg/kg)
+
+Deep concentration (near groundwater)
+
+Stacked fractions (%):
+
+Dissolved / Adsorbed / Immobilized (per week or final week)
+
+Auto-explanation block
+
+After each run (and after each step), show 3–5 short bullets:
+
+what changed
+
+why it changed
+
+trade-offs (if any)
+
+3) Model Requirements (Didactic, Stable)
+
+Not research-grade, but must be coherent and numerically stable.
+
+Conceptual structure
+
+Each week:
+
+Total contaminant is partitioned into:
+
+dissolved fraction
+
+adsorbed fraction
+
+immobilized fraction
+
+Required monotonic behaviors for Cd²⁺
+
+Lower pH → higher dissolved fraction → higher mobility
+
+Higher pH → higher adsorption → lower mobility
+
+Higher clay/CEC → higher adsorption
+
+Higher organic matter (MVP) → higher adsorption
+
+Higher rainfall + higher permeability → higher leaching (loss from surface; increase deep)
+
+Shallower groundwater → higher groundwater risk
+
+Interventions
+
+Lime: increases pH gradually, reducing dissolved fraction
+
+Biochar/Compost: increases adsorption capacity (reduce dissolved in MVP)
+
+Vegetative cover: reduces surface transport/erosion indicator (does not directly change leaching in MVP)
+
+Stability constraints
+
+Concentrations never negative
+
+Fractions always sum to 1 (within floating tolerance)
+
+Clamp all derived values into reasonable bounds to avoid oscillations
+
+4) Defaults (Must Match)
+
+Texture: Loam
+
+OM: 3%
+
+pH: 5.5
+
+Rainfall: 40 mm/week
+
+Permeability: Medium
+
+Groundwater depth: 3 m
+
+Initial concentration: 60 mg/kg
+
+Contaminated depth: 0–20 cm
+
+Intervention: None
+
+Duration: 12 weeks
+
+5) Project Structure + Quality
+
+Keep model logic separated from UI components.
+
+Add input validation and tooltips (short, student-friendly).
+
+Include a README with:
+
+how to run
+
+model assumptions (brief)
+
+how to tweak constants/ranges
+
+Testing (minimum)
+
+Add at least a few automated checks (unit tests or script) verifying:
+
+fractions sum to ~1
+
+increasing pH decreases dissolved fraction (holding others constant)
+
+increasing rainfall increases leaching (holding others constant)
+
+6) Acceptance Criteria (Checklist)
+
+The work is done when:
+
+“Run Simulation” produces 12-week outputs and updates both graphs, indicators, visualization, and explanation bullets.
+
+“Step Forward” advances exactly one week and updates everything consistently.
+
+“Reset” restores defaults and clears outputs to week 0.
+
+Export downloads a JSON or CSV reflecting the simulation results.
+
+UI matches the 4-zone layout and is clean and usable.
+
+Proceed to implement now. Create all necessary files.
