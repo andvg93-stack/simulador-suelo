@@ -25,6 +25,9 @@ This starts a local static server; open http://localhost:5173 in your browser.
   - **Review calculated weeks** synchronizes the profile, charts, indicators, and explanations with the selected week
   - **Reset** (back to week 0 defaults)
   - **Export Results** (JSON download)
+- Reloading the page in the same tab restores the scenario, calculated weeks, and selected view.
+
+GitHub Pages serves the repository root from `main`. Update the version in the CSS and app script URLs in `index.html` when publishing changes to those files. Version the import URL of any changed JavaScript module too. Chart.js is served locally from `vendor/`.
 
 ## Model assumptions (didactic)
 

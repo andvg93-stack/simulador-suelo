@@ -14,7 +14,8 @@ const mime = {
 
 const server = http.createServer(async (req, res) => {
   try {
-    const reqPath = req.url === '/' ? '/index.html' : req.url;
+    const [pathname] = req.url.split('?', 1);
+    const reqPath = pathname === '/' ? '/index.html' : pathname;
     const safePath = path.normalize(reqPath).replace(/^\.\.(\/|\\|$)+/, '');
     const filePath = path.join(root, safePath);
     const data = await readFile(filePath);
