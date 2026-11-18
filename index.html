@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Soil Contamination Simulator (Cd)</title>
-    <link rel="stylesheet" href="styles.css?v=20261118-2" />
-    <script defer src="vendor/chart.umd-4.6.1.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1"></script>
   </head>
   <body>
     <header class="site-header">
@@ -17,7 +17,7 @@
         </div>
         <span class="model-label" data-text="modelLabel">Teaching model</span>
         <label class="language-toggle">
-          <input type="checkbox" id="spanishToggle" autocomplete="off" />
+          <input type="checkbox" id="spanishToggle" />
           <span lang="es">Español</span>
         </label>
       </div>
@@ -57,7 +57,7 @@
 
         <div class="timeline">
           <label for="weekRange" data-text="reviewWeek">Review calculated weeks</label>
-          <input type="range" id="weekRange" min="0" max="12" value="0" autocomplete="off" disabled />
+          <input type="range" id="weekRange" min="0" max="12" value="0" disabled />
           <div class="timeline-ticks" id="timelineTicks" aria-hidden="true"></div>
         </div>
 
@@ -108,7 +108,7 @@
         <p class="scenario-caption" data-text="controlsSubtitle">Model parameters</p>
         <p class="scenario-pending" id="scenarioPending" data-text="scenarioPending" hidden>Run or advance the simulation to apply your edits.</p>
 
-        <form id="parameters" autocomplete="off">
+        <form id="parameters">
           <details open>
             <summary data-text="soilGroupTitle">Soil</summary>
             <div class="fields">
@@ -203,6 +203,6 @@
         </form>
       </aside>
     </main>
-    <script type="module" src="src/app.js?v=20261118-2"></script>
+    <script type="module" src="src/app.js"></script>
   </body>
 </html>

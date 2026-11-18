@@ -1,47 +1,25 @@
 :root {
   color-scheme: light dark;
-  --paper: #f7f5ee;
-  --panel: #fffdf7;
-  --ink: #263429;
-  --muted: #586257;
-  --rule: #dedfd1;
-  --soft: #e9ede0;
-  --brand: #344d39;
-  --brand-text: #faf9f1;
-  --ochre: #8e4b31;
-  --blue: #256470;
-  --moss: #607653;
-  --low-bg: #e6eddd;
-  --low-text: #3d5c37;
-  --medium-bg: #f3e6c7;
-  --medium-text: #755014;
-  --high-bg: #f3ddd4;
-  --high-text: #852f21;
+  --paper: light-dark(#f7f5ee, #20261f);
+  --panel: light-dark(#fffdf7, #262d25);
+  --ink: light-dark(#263429, #eff1e8);
+  --muted: light-dark(#586257, #bac5b6);
+  --rule: light-dark(#dedfd1, #465244);
+  --soft: light-dark(#e9ede0, #303d30);
+  --brand: light-dark(#344d39, #d3e5c9);
+  --brand-text: light-dark(#faf9f1, #233420);
+  --ochre: light-dark(#8e4b31, #f1a783);
+  --blue: light-dark(#256470, #8bc9d4);
+  --moss: light-dark(#607653, #b9ce99);
+  --low-bg: light-dark(#e6eddd, #334732);
+  --low-text: light-dark(#3d5c37, #d1e7c5);
+  --medium-bg: light-dark(#f3e6c7, #494025);
+  --medium-text: light-dark(#755014, #f3d98e);
+  --high-bg: light-dark(#f3ddd4, #56372d);
+  --high-text: light-dark(#852f21, #ffcdbb);
   font: 15px/1.5 "Segoe UI", system-ui, sans-serif;
   color: var(--ink);
   background: var(--paper);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #20261f;
-    --panel: #262d25;
-    --ink: #eff1e8;
-    --muted: #bac5b6;
-    --rule: #465244;
-    --soft: #303d30;
-    --brand: #d3e5c9;
-    --brand-text: #233420;
-    --ochre: #f1a783;
-    --blue: #8bc9d4;
-    --moss: #b9ce99;
-    --low-bg: #334732;
-    --low-text: #d1e7c5;
-    --medium-bg: #494025;
-    --medium-text: #f3d98e;
-    --high-bg: #56372d;
-    --high-text: #ffcdbb;
-  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -277,10 +255,6 @@ button:disabled { color: var(--muted); opacity: .65; cursor: default; }
 .explanation { margin-top: 1rem; padding: .65rem .75rem; border-left: 2px solid var(--moss); background: var(--soft); }
 .explanation ul { margin: .3rem 0 0; padding-inline-start: 1rem; font-size: .82rem; color: var(--muted); }
 .explanation li + li { margin-top: .25rem; }
-
-@media (min-width: 1021px) and (max-height: 850px) {
-  .soil-section { height: clamp(310px, min(34vw, calc(100vh - 430px)), 475px); }
-}
 
 @media (max-width: 1020px) {
   .workspace {

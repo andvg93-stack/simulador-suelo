@@ -2,12 +2,10 @@ import { DEFAULTS } from './constants.js';
 import { translations } from './i18n.js';
 import { explainChanges, getIndicators, getValidatedParams, initialState, runSimulation, simulateWeek } from './model.js';
 import { createCharts, markChartWeek, updateCharts } from './results-charts.js';
-import { restoreSession, saveSession } from './session.js';
 import { drawSoilProfile } from './soil-profile.js';
 
 const byId = (id) => document.getElementById(id);
 const parameterForm = byId('parameters');
-const scenarioGroups = [...parameterForm.querySelectorAll('details')];
 const weekRange = byId('weekRange');
 const soilCanvas = byId('soilCanvas');
 const chartButtons = [...document.querySelectorAll('[data-chart]')];
@@ -19,16 +17,13 @@ const controlIds = [
 const controls = Object.fromEntries(controlIds.map((id) => [id, byId(id)]));
 const rangeIds = controlIds.filter((id) => controls[id].type === 'range');
 
-const restored = restoreSession();
-const browserLanguage = navigator.language.toLowerCase().split('-')[0];
-let language = restored?.language ?? (browserLanguage === 'es' ? 'es' : 'en');
+let language = 'en';
 let labels = translations[language];
 let decimal = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
 let measurement = new Intl.NumberFormat(language, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-let params = restored?.params ?? getValidatedParams(DEFAULTS);
-let history = restored?.history ?? [{ state: initialState(params), params }];
-let selectedWeek = restored?.selectedWeek ?? 0;
-let activeChart = restored?.chart ?? 'concentration';
+let params = getValidatedParams(DEFAULTS);
+let history = [{ state: initialState(params), params }];
+let selectedWeek = 0;
 
 const charts = createCharts(DEFAULTS.durationWeeks);
 if (!charts) {
@@ -71,7 +66,6 @@ function syncControlLabels(editingCEC = false) {
 
 function localize() {
   labels = translations[language];
-  byId('spanishToggle').checked = language === 'es';
   document.documentElement.lang = language;
   document.title = labels.documentTitle;
   decimal = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
@@ -152,25 +146,6 @@ function refreshHistory() {
   renderSelectedWeek();
 }
 
-function persistSession() {
-  saveSession({
-    language,
-    params,
-    history,
-    selectedWeek,
-    chart: activeChart,
-    groups: scenarioGroups.map((group) => group.open),
-  });
-}
-
-function showChart(chart) {
-  activeChart = chart;
-  chartButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.chart === chart)));
-  for (const [key, panel] of Object.entries(chartPanels)) panel.hidden = key !== chart;
-  charts?.[chart].resize();
-  charts?.[chart].draw();
-}
-
 parameterForm.addEventListener('submit', (event) => event.preventDefault());
 
 parameterForm.addEventListener('input', (event) => {
@@ -184,7 +159,6 @@ parameterForm.addEventListener('input', (event) => {
     renderProfile();
   }
   syncControlLabels(editingCEC);
-  persistSession();
 });
 
 controls.cec.addEventListener('change', () => syncControlLabels());
@@ -193,19 +167,20 @@ byId('spanishToggle').addEventListener('change', (event) => {
   language = event.target.checked ? 'es' : 'en';
   localize();
   refreshHistory();
-  persistSession();
 });
 
 weekRange.addEventListener('input', () => {
   selectedWeek = weekRange.valueAsNumber;
   renderSelectedWeek();
-  persistSession();
 });
 
 chartButtons.forEach((button) => {
   button.addEventListener('click', () => {
-    showChart(button.dataset.chart);
-    persistSession();
+    const next = button.dataset.chart;
+    chartButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+    for (const [key, panel] of Object.entries(chartPanels)) panel.hidden = key !== next;
+    charts?.[next].resize();
+    charts?.[next].draw();
   });
 });
 
@@ -215,7 +190,6 @@ byId('runBtn').addEventListener('click', () => {
   history = run.states.map((state) => ({ state, params }));
   selectedWeek = history.length - 1;
   refreshHistory();
-  persistSession();
 });
 
 byId('stepBtn').addEventListener('click', () => {
@@ -226,7 +200,6 @@ byId('stepBtn').addEventListener('click', () => {
   history.push({ state: simulateWeek(state, params), params });
   selectedWeek = history.length - 1;
   refreshHistory();
-  persistSession();
 });
 
 byId('resetBtn').addEventListener('click', () => {
@@ -235,7 +208,6 @@ byId('resetBtn').addEventListener('click', () => {
   history = [{ state: initialState(params), params }];
   selectedWeek = 0;
   refreshHistory();
-  persistSession();
 });
 
 byId('exportBtn').addEventListener('click', () => {
@@ -249,18 +221,6 @@ byId('exportBtn').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-if (restored) {
-  for (const id of controlIds) {
-    if (id === 'advancedCEC') controls[id].checked = params[id];
-    else if (id !== 'cec') controls[id].value = params[id];
-  }
-  scenarioGroups.forEach((group, index) => {
-    if (index < restored.groups.length) group.open = restored.groups[index];
-  });
-}
-for (const group of scenarioGroups) group.addEventListener('toggle', persistSession);
-
 localize();
 refreshHistory();
-showChart(activeChart);
 new ResizeObserver(renderProfile).observe(soilCanvas);
