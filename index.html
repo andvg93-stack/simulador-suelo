@@ -4,205 +4,120 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Soil Contamination Simulator (Cd)</title>
-    <link rel="stylesheet" href="styles.css?v=20261118-2" />
-    <script defer src="vendor/chart.umd-4.6.1.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    <header class="site-header">
-      <div class="site-header-inner">
-        <div class="element-mark" aria-hidden="true">Cd</div>
-        <div class="site-title">
-          <h1 data-text="appTitle">Cadmium in Soil</h1>
-          <p data-text="appSubtitle">Soil chemistry simulator</p>
-        </div>
-        <span class="model-label" data-text="modelLabel">Teaching model</span>
-        <label class="language-toggle">
-          <input type="checkbox" id="spanishToggle" autocomplete="off" />
-          <span lang="es">Español</span>
-        </label>
-      </div>
+    <header>
+      <h1 id="appTitle">Soil Contamination Simulator (Cd)</h1>
+      <p id="appSubtitle">Explore how pH, texture, organic matter, and water control contaminant mobility.</p>
     </header>
 
-    <main class="workspace">
-      <section class="profile" aria-labelledby="vizTitle">
-        <header class="profile-header">
-          <div>
-            <h2 id="vizTitle" data-text="vizTitle">Soil profile</h2>
-            <p id="profileNote" data-text="profileNote">Conceptual cross-section · not to scale</p>
-          </div>
-          <output id="weekLabel" class="week-label" for="weekRange">Week 0 / 12</output>
-        </header>
+    <main class="layout">
+      <aside class="panel controls">
+        <h2 id="controlsTitle">Controls</h2>
+        <label class="toggle language-toggle"><input type="checkbox" id="spanishToggle" /> <span id="spanishToggleLabel">Spanish</span></label>
 
-        <figure class="soil-section" aria-labelledby="vizTitle" aria-describedby="profileNote">
-          <canvas id="soilCanvas" aria-hidden="true"></canvas>
-          <p class="soil-rain"><span data-text="rainLabel">Rain or irrigation</span> <strong id="profileRain"></strong></p>
-          <dl class="soil-readings">
-            <div class="soil-reading soil-surface">
-              <dt><span data-text="surface">Surface</span> <span id="profileDepth"></span></dt>
-              <dd><output id="profileSurface"></output> <small>mg/kg</small></dd>
-            </div>
-            <div class="soil-reading soil-deep">
-              <dt data-text="deep">Deep soil</dt>
-              <dd><output id="profileDeep"></output> <small>mg/kg</small></dd>
-            </div>
-          </dl>
-          <p class="soil-water"><span data-text="waterTable">Water table</span> <strong id="profileWater"></strong></p>
-        </figure>
-
-        <ul class="soil-legend">
-          <li><i class="legend-dot" aria-hidden="true"></i> <span data-text="cadmiumLegend">Cadmium in soil</span></li>
-          <li><i class="legend-arrow" aria-hidden="true">↓</i> <span data-text="infiltrationLegend">Infiltration</span></li>
-          <li><i class="legend-dash" aria-hidden="true"></i> <span data-text="waterTable">Water table</span></li>
-        </ul>
-
-        <div class="timeline">
-          <label for="weekRange" data-text="reviewWeek">Review calculated weeks</label>
-          <input type="range" id="weekRange" min="0" max="12" value="0" autocomplete="off" disabled />
-          <div class="timeline-ticks" id="timelineTicks" aria-hidden="true"></div>
-        </div>
-
-        <div class="simulation-actions">
-          <button type="button" id="runBtn" class="button-primary"><span aria-hidden="true">▶</span> <span data-text="runBtn">Run simulation</span></button>
-          <button type="button" id="stepBtn"><span data-text="stepBtn">Advance one week</span> <span aria-hidden="true">→</span></button>
-          <button type="button" id="resetBtn" class="button-quiet" data-text="resetBtn">Reset</button>
-          <button type="button" id="exportBtn" class="button-quiet" data-text="exportBtn">Export JSON</button>
-        </div>
-        <a class="scenario-link" href="#scenario" data-text="editScenario">Edit parameters</a>
-      </section>
-
-      <section class="results" aria-labelledby="resultsTitle">
-        <h2 id="resultsTitle" data-text="resultsTitle">Results</h2>
-        <dl class="indicators">
-          <div id="mobilityIndicator"><dt data-text="mobility">Mobility</dt><dd><strong></strong></dd></div>
-          <div id="bioIndicator"><dt data-text="bioavailability">Bioavailability</dt><dd><strong></strong></dd></div>
-          <div id="gwIndicator"><dt data-text="groundwaterRisk">Groundwater risk</dt><dd><strong></strong></dd></div>
-        </dl>
-
-        <div id="chartControls" class="chart-switch">
-          <button type="button" data-chart="concentration" aria-pressed="true" aria-controls="concPanel" data-text="concentration">Concentration</button>
-          <button type="button" data-chart="fractions" aria-pressed="false" aria-controls="fractionPanel" data-text="fractions">Fractions</button>
-        </div>
-        <div id="concPanel">
-          <p class="chart-caption" id="concCaption" data-text="concCaption">Cadmium in soil · mg/kg</p>
-          <div class="chart-frame"><canvas id="concChart" role="img" aria-labelledby="concCaption"></canvas></div>
-        </div>
-        <div id="fractionPanel" hidden>
-          <p class="chart-caption" id="fractionCaption" data-text="fractionCaption">Cadmium distribution · %</p>
-          <div class="chart-frame"><canvas id="fractionChart" role="img" aria-labelledby="fractionCaption"></canvas></div>
-          <dl class="fraction-readings">
-            <div><dt><i class="fraction-dissolved" aria-hidden="true"></i><span data-text="dissolved">Dissolved</span></dt><dd id="dissolvedValue"></dd></div>
-            <div><dt><i class="fraction-adsorbed" aria-hidden="true"></i><span data-text="adsorbed">Adsorbed</span></dt><dd id="adsorbedValue"></dd></div>
-            <div><dt><i class="fraction-immobilized" aria-hidden="true"></i><span data-text="immobilized">Immobilized</span></dt><dd id="immobilizedValue"></dd></div>
-          </dl>
-        </div>
-        <p class="chart-caption" id="chartUnavailable" data-text="chartUnavailable" hidden>Charts could not load. The weekly results are still available.</p>
-
-        <section class="explanation" aria-labelledby="explanationTitle">
-          <h3 id="explanationTitle" data-text="explanationTitle">What changed?</h3>
-          <ul id="explanationList"></ul>
+        <section>
+          <h3 id="soilGroupTitle">Soil</h3>
+          <label title="Particle composition affects sorption and flow."><span id="textureLabel">Texture</span>
+            <select id="texture">
+              <option value="Sandy">Sandy</option>
+              <option value="Loam" selected>Loam</option>
+              <option value="Clay">Clay</option>
+            </select>
+          </label>
+          <label title="More organic matter usually binds more Cd."><span id="organicMatterLabel">Organic Matter (%)</span> <span id="organicMatterVal"></span>
+            <input type="range" id="organicMatter" min="0" max="10" step="0.5" value="3" />
+          </label>
+          <label title="Lower pH increases Cd solubility."><span id="pHLabel">pH</span> <span id="pHVal"></span>
+            <input type="range" id="pH" min="4" max="8.5" step="0.1" value="5.5" />
+          </label>
+          <label title="Cation exchange capacity influences adsorption."><span id="cecLabel">CEC (cmol(+)/kg)</span>
+            <input type="number" id="cec" disabled />
+          </label>
+          <label class="toggle"><input type="checkbox" id="advancedCEC" /> <span id="advancedModeLabel">Advanced Mode (manual CEC)</span></label>
         </section>
+
+        <section>
+          <h3 id="hydrologyGroupTitle">Hydrology</h3>
+          <label title="Weekly water input driving percolation."><span id="rainfallLabel">Rainfall/Irrigation (mm/week)</span> <span id="rainfallVal"></span>
+            <input type="range" id="rainfall" min="0" max="120" step="5" value="40" />
+          </label>
+          <label title="Higher permeability can increase downward transport."><span id="permeabilityLabel">Permeability</span>
+            <select id="permeability">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+            </select>
+          </label>
+          <label title="Shallow groundwater is more vulnerable."><span id="groundwaterDepthLabel">Groundwater depth (m)</span> <span id="groundwaterDepthVal"></span>
+            <input type="range" id="groundwaterDepth" min="0.5" max="10" step="0.5" value="3" />
+          </label>
+        </section>
+
+        <section>
+          <h3 id="contaminationGroupTitle">Contamination</h3>
+          <label title="Initial Cd concentration in contaminated zone."><span id="initialConcentrationLabel">Initial concentration (mg/kg)</span> <span id="initialConcentrationVal"></span>
+            <input type="range" id="initialConcentration" min="0" max="200" step="5" value="60" />
+          </label>
+          <label title="Depth of contaminated soil affects transfer to deeper layers."><span id="contaminatedDepthLabel">Contaminated depth</span>
+            <select id="contaminatedDepth">
+              <option value="0-20" selected>0–20 cm</option>
+              <option value="0-40">0–40 cm</option>
+            </select>
+          </label>
+        </section>
+
+        <section>
+          <h3 id="interventionsGroupTitle">Interventions</h3>
+          <label><span id="interventionLabel">Intervention</span>
+            <select id="intervention">
+              <option value="None" selected>None</option>
+              <option value="Lime">Lime</option>
+              <option value="BiocharCompost">Biochar/Compost</option>
+              <option value="VegetativeCover">Vegetative cover</option>
+            </select>
+          </label>
+          <label id="limeDoseWrap" class="conditional"><span id="limeDoseLabel">Lime dose</span> <span id="limeDoseVal"></span>
+            <input type="range" id="limeDose" min="0" max="5" step="0.5" value="0" />
+          </label>
+          <label id="biocharDoseWrap" class="conditional"><span id="biocharDoseLabel">Biochar/Compost dose</span> <span id="biocharDoseVal"></span>
+            <input type="range" id="biocharDose" min="0" max="5" step="0.5" value="0" />
+          </label>
+        </section>
+
+        <div class="buttons">
+          <button id="runBtn">Run Simulation</button>
+          <button id="stepBtn">Step Forward</button>
+          <button id="resetBtn">Reset</button>
+          <button id="exportBtn">Export Results</button>
+        </div>
+      </aside>
+
+      <section class="panel viz">
+        <h2 id="vizTitle">2D Soil Visualization</h2>
+        <canvas id="soilCanvas" width="460" height="520"></canvas>
       </section>
 
-      <aside class="scenario" id="scenario" aria-labelledby="controlsTitle">
-        <h2 id="controlsTitle" data-text="controlsTitle">Scenario</h2>
-        <p class="scenario-caption" data-text="controlsSubtitle">Model parameters</p>
-        <p class="scenario-pending" id="scenarioPending" data-text="scenarioPending" hidden>Run or advance the simulation to apply your edits.</p>
+      <aside class="panel results">
+        <h2 id="resultsTitle">Results</h2>
+        <div class="indicators">
+          <div class="indicator" id="mobilityIndicator"><span id="mobilityText">Mobility</span>: <strong>-</strong></div>
+          <div class="indicator" id="bioIndicator"><span id="bioavailabilityText">Bioavailability</span>: <strong>-</strong></div>
+          <div class="indicator" id="gwIndicator"><span id="groundwaterRiskText">Groundwater Risk</span>: <strong>-</strong></div>
+        </div>
 
-        <form id="parameters" autocomplete="off">
-          <details open>
-            <summary data-text="soilGroupTitle">Soil</summary>
-            <div class="fields">
-              <label data-help="texture">
-                <span data-text="textureLabel">Texture</span>
-                <select id="texture">
-                  <option value="Sandy" data-text="sandy">Sandy</option>
-                  <option value="Loam" data-text="loam" selected>Loam</option>
-                  <option value="Clay" data-text="clay">Clay</option>
-                </select>
-              </label>
-              <label class="range-field" data-help="organicMatter">
-                <span data-text="organicMatterLabel">Organic matter (%)</span><output for="organicMatter" id="organicMatterVal"></output>
-                <input type="range" id="organicMatter" min="0" max="10" step="0.5" value="3" />
-              </label>
-              <label class="range-field" data-help="pH">
-                <span>pH</span><output for="pH" id="pHVal"></output>
-                <input type="range" id="pH" min="4" max="8.5" step="0.1" value="5.5" />
-              </label>
-              <label data-help="cec">
-                <span data-text="cecLabel">CEC (cmol(+)/kg)</span>
-                <input type="number" id="cec" min="1" max="60" step="0.1" disabled />
-              </label>
-              <label class="check-field">
-                <input type="checkbox" id="advancedCEC" />
-                <span data-text="advancedModeLabel">Advanced mode · manual CEC</span>
-              </label>
-            </div>
-          </details>
+        <canvas id="concChart"></canvas>
+        <canvas id="fractionChart"></canvas>
 
-          <details>
-            <summary data-text="hydrologyGroupTitle">Hydrology</summary>
-            <div class="fields">
-              <label class="range-field" data-help="rainfall">
-                <span data-text="rainfallLabel">Rain or irrigation (mm/week)</span><output for="rainfall" id="rainfallVal"></output>
-                <input type="range" id="rainfall" min="0" max="120" step="5" value="40" />
-              </label>
-              <label data-help="permeability">
-                <span data-text="permeabilityLabel">Permeability</span>
-                <select id="permeability">
-                  <option value="Low" data-text="lowPermeability">Low</option>
-                  <option value="Medium" data-text="mediumPermeability" selected>Medium</option>
-                  <option value="High" data-text="highPermeability">High</option>
-                </select>
-              </label>
-              <label class="range-field" data-help="groundwaterDepth">
-                <span data-text="groundwaterDepthLabel">Groundwater depth (m)</span><output for="groundwaterDepth" id="groundwaterDepthVal"></output>
-                <input type="range" id="groundwaterDepth" min="0.5" max="10" step="0.5" value="3" />
-              </label>
-            </div>
-          </details>
-
-          <details>
-            <summary data-text="contaminationGroupTitle">Contamination</summary>
-            <div class="fields">
-              <label class="range-field" data-help="initialConcentration">
-                <span data-text="initialConcentrationLabel">Initial Cd (mg/kg)</span><output for="initialConcentration" id="initialConcentrationVal"></output>
-                <input type="range" id="initialConcentration" min="0" max="200" step="5" value="60" />
-              </label>
-              <label data-help="contaminatedDepth">
-                <span data-text="contaminatedDepthLabel">Contaminated depth</span>
-                <select id="contaminatedDepth">
-                  <option value="0-20" selected>0–20 cm</option>
-                  <option value="0-40">0–40 cm</option>
-                </select>
-              </label>
-            </div>
-          </details>
-
-          <details>
-            <summary data-text="interventionsGroupTitle">Interventions</summary>
-            <div class="fields">
-              <label>
-                <span data-text="interventionLabel">Treatment</span>
-                <select id="intervention">
-                  <option value="None" data-text="none" selected>None</option>
-                  <option value="Lime" data-text="lime">Lime</option>
-                  <option value="BiocharCompost">Biochar/Compost</option>
-                  <option value="VegetativeCover" data-text="vegetativeCover">Vegetative cover</option>
-                </select>
-              </label>
-              <label id="limeDoseWrap" class="range-field" hidden>
-                <span data-text="limeDoseLabel">Lime dose</span><output for="limeDose" id="limeDoseVal"></output>
-                <input type="range" id="limeDose" min="0" max="5" step="0.5" value="0" />
-              </label>
-              <label id="biocharDoseWrap" class="range-field" hidden>
-                <span data-text="biocharDoseLabel">Biochar/compost dose</span><output for="biocharDose" id="biocharDoseVal"></output>
-                <input type="range" id="biocharDose" min="0" max="5" step="0.5" value="0" />
-              </label>
-            </div>
-          </details>
-        </form>
+        <div class="explanation">
+          <h3 id="explanationTitle">Auto-Explanation</h3>
+          <ul id="explanationList"></ul>
+        </div>
       </aside>
     </main>
-    <script type="module" src="src/app.js?v=20261118-2"></script>
+
+    <script type="module" src="src/app.js"></script>
   </body>
 </html>
