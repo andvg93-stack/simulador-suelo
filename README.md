@@ -14,15 +14,13 @@ This starts a local static server; open http://localhost:5173 in your browser.
 
 - 4-zone layout:
   - Header
-  - Foldable scenario parameters
-  - Conceptual soil profile with depth, infiltration, and cadmium readouts
-  - Results panel with indicators, concentration and fraction charts, and auto-explanation
-  - On narrow screens the soil profile appears first
+  - Left controls panel
+  - Center 2D conceptual soil profile
+  - Right panel with indicators, charts, and auto-explanation
 - 12-week discrete simulation with:
   - Language toggle checkbox (English/Spanish) that translates all UI text
   - **Run Simulation** (full run)
   - **Step Forward** (one week)
-  - **Review calculated weeks** synchronizes the profile, charts, indicators, and explanations with the selected week
   - **Reset** (back to week 0 defaults)
   - **Export Results** (JSON download)
 
