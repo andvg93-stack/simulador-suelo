@@ -32,3 +32,22 @@ test('runSimulation returns 12 weeks plus initial state by default', () => {
   assert.equal(out.states.length, 13);
   assert.equal(out.states.at(-1).week, 12);
 });
+
+test('deeper contaminated depth (0-40) increases deep concentration transfer', () => {
+  const shallow = runSimulation({ ...DEFAULTS, contaminatedDepth: '0-20', rainfall: 90, permeability: 'High' });
+  const deep = runSimulation({ ...DEFAULTS, contaminatedDepth: '0-40', rainfall: 90, permeability: 'High' });
+  assert.ok(deep.states.at(-1).deepConc > shallow.states.at(-1).deepConc);
+});
+
+test('groundwater risk decreases from moderate to very deep groundwater depth', () => {
+  const moderateDepth = runSimulation({ ...DEFAULTS, groundwaterDepth: 4, rainfall: 90, permeability: 'High' });
+  const veryDeep = runSimulation({ ...DEFAULTS, groundwaterDepth: 10, rainfall: 90, permeability: 'High' });
+  assert.ok(veryDeep.states.at(-1).gwRiskScore < moderateDepth.states.at(-1).gwRiskScore);
+});
+
+test('vegetative cover reduces early leaching and deep transfer in wet permeable conditions', () => {
+  const none = runSimulation({ ...DEFAULTS, intervention: 'None', rainfall: 100, permeability: 'High' });
+  const veg = runSimulation({ ...DEFAULTS, intervention: 'VegetativeCover', rainfall: 100, permeability: 'High' });
+  assert.ok(veg.states[1].leached < none.states[1].leached);
+  assert.ok(veg.states.at(-1).deepConc < none.states.at(-1).deepConc);
+});

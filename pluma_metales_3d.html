@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pluma 3D de metales pesados en suelo</title>
+    <style>
+      :root {
+        --bg: #edf2f6;
+        --panel: #ffffff;
+        --ink: #1e2b35;
+        --muted: #5d6d7b;
+        --line: #d6dee7;
+        --blue: #145f86;
+        --blue-2: #0f4b69;
+        --plume-core: #176fbe;
+        --plume-front: #1f9b67;
+        --gw-low: #2c78be;
+        --gw-high: #b73b35;
+        --green: #547f5b;
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        min-width: 0;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: linear-gradient(180deg, #f6f8fb 0%, var(--bg) 100%);
+      }
+
+      main {
+        width: min(1320px, calc(100% - 24px));
+        margin: 0 auto;
+        padding: 14px 0;
+        display: grid;
+        grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(22, 36, 50, 0.08);
+      }
+
+      .controls {
+        padding: 14px;
+        display: grid;
+        align-content: start;
+        gap: 12px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 1.18rem;
+        line-height: 1.22;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 0.88rem;
+        line-height: 1.38;
+      }
+
+      .control {
+        display: grid;
+        gap: 6px;
+      }
+
+      .remediation {
+        display: grid;
+        gap: 8px;
+        border: 1px solid #dce4ec;
+        border-radius: 8px;
+        padding: 10px;
+        background: #fbfdff;
+      }
+
+      .remediation h3 {
+        font-size: 0.92rem;
+      }
+
+      .check-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.86rem;
+        line-height: 1.28;
+      }
+
+      .check-row input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--blue);
+        flex: 0 0 auto;
+      }
+
+      .control span {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 0.84rem;
+        font-weight: 650;
+      }
+
+      .value {
+        color: var(--blue);
+        font-variant-numeric: tabular-nums;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--blue);
+      }
+
+      .buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      button {
+        border: 1px solid var(--blue);
+        border-radius: 8px;
+        padding: 0.55rem 0.7rem;
+        background: var(--blue);
+        color: white;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: var(--blue-2);
+      }
+
+      button.secondary {
+        background: #f7fafc;
+        border-color: #bfcedb;
+        color: #263b4a;
+      }
+
+      .metrics {
+        display: grid;
+        gap: 8px;
+      }
+
+      .metric {
+        border: 1px solid #dce4ec;
+        border-radius: 8px;
+        padding: 8px;
+        background: #fbfdff;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 1.05rem;
+        color: #173c55;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .legend {
+        display: grid;
+        gap: 7px;
+        font-size: 0.82rem;
+        color: #334b5d;
+      }
+
+      .legend-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .swatch {
+        width: 18px;
+        height: 12px;
+        border-radius: 3px;
+        border: 1px solid rgba(0, 0, 0, 0.16);
+      }
+
+      .swatch.red { background: rgba(23, 111, 190, 0.72); }
+      .swatch.amber { background: rgba(31, 155, 103, 0.5); }
+      .swatch.blue { background: rgba(44, 120, 190, 0.32); }
+
+      .viewer {
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: auto minmax(420px, 1fr);
+      }
+
+      .viewer-head {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .viewer-head h2 {
+        font-size: 1rem;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .canvas-wrap {
+        position: relative;
+        min-height: 420px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(239, 245, 250, 0.94));
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 540px;
+        cursor: grab;
+        touch-action: none;
+      }
+
+      canvas.dragging {
+        cursor: grabbing;
+      }
+
+      .badge {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        padding: 7px 9px;
+        border: 1px solid #cfdce7;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.84);
+        color: #355269;
+        font-size: 0.78rem;
+        backdrop-filter: blur(8px);
+      }
+
+      @media (max-width: 880px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+
+        .viewer {
+          grid-template-rows: auto minmax(420px, 60vh);
+        }
+
+        .viewer-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <aside class="panel controls">
+        <div class="control">
+          <h1>Pluma 3D de contaminación por metales pesados</h1>
+          <p class="subtitle">Modelo visual conceptual: la pluma se expande y profundiza con el tiempo, el flujo de agua y la movilidad química.</p>
+        </div>
+
+        <label class="control">
+          <span>Tiempo <b class="value" id="timeValue">0 semanas</b></span>
+          <input id="timeSlider" type="range" min="0" max="24" value="8" step="1" />
+        </label>
+
+        <label class="control">
+          <span>Concentración inicial <b class="value" id="concentrationValue">90 mg/kg</b></span>
+          <input id="concentrationSlider" type="range" min="20" max="220" value="90" step="5" />
+        </label>
+
+        <label class="control">
+          <span>Infiltración <b class="value" id="infiltrationValue">55 mm/sem</b></span>
+          <input id="infiltrationSlider" type="range" min="5" max="120" value="55" step="5" />
+        </label>
+
+        <label class="control">
+          <span>Movilidad geoquímica <b class="value" id="mobilityValue">0.58</b></span>
+          <input id="mobilitySlider" type="range" min="0.15" max="1" value="0.58" step="0.01" />
+        </label>
+
+        <label class="control">
+          <span>Profundidad nivel freatico <b class="value" id="groundwaterValue">2.5 m</b></span>
+          <input id="groundwaterSlider" type="range" min="1" max="4.5" value="2.5" step="0.1" />
+        </label>
+
+        <section class="remediation" aria-label="Medidas de remediacion">
+          <h3>Medidas de remediacion</h3>
+          <label class="check-row">
+            <input id="biocharCheck" type="checkbox" />
+            Aplicacion de biochar
+          </label>
+          <label class="check-row">
+            <input id="vegetationCheck" type="checkbox" />
+            Cobertura vegetal
+          </label>
+          <label class="check-row">
+            <input id="limeCheck" type="checkbox" />
+            Aplicacion de cal
+          </label>
+        </section>
+
+        <div class="buttons">
+          <button id="playButton" type="button">Animar</button>
+          <button id="resetButton" class="secondary" type="button">Reiniciar vista</button>
+        </div>
+
+        <section class="metrics" aria-label="Indicadores de pluma">
+          <article class="metric">
+            <strong id="lengthMetric">2.0 m</strong>
+            <span>Alcance longitudinal estimado</span>
+          </article>
+          <article class="metric">
+            <strong id="depthMetric">0.4 m</strong>
+            <span>Profundidad máxima de la pluma</span>
+          </article>
+          <article class="metric">
+            <strong id="distanceMetric">2.1 m</strong>
+            <span>Distancia vertical hasta el nivel freatico</span>
+          </article>
+          <article class="metric">
+            <strong id="riskMetric">Bajo</strong>
+            <span>Riesgo relativo hacia agua subterránea</span>
+          </article>
+          <article class="metric">
+            <strong id="remediationMetric">Ninguna</strong>
+            <span>Medidas aplicadas al escenario</span>
+          </article>
+        </section>
+
+        <section class="legend" aria-label="Leyenda">
+          <div class="legend-row"><i class="swatch red"></i> Núcleo de concentración alta</div>
+          <div class="legend-row"><i class="swatch amber"></i> Frente dispersivo</div>
+          <div class="legend-row"><i class="swatch blue"></i> Zona saturada: azul en bajo riesgo, rojo en riesgo alto</div>
+        </section>
+      </aside>
+
+      <section class="panel viewer">
+        <header class="viewer-head">
+          <div>
+            <h2>Volumen de suelo interactivo</h2>
+            <p class="hint">Arrastra sobre la escena para rotar el bloque de suelo y observar la pluma desde otro ángulo.</p>
+          </div>
+          <p class="hint" id="cameraReadout">azimut 38°, elevación 24°</p>
+        </header>
+
+        <div class="canvas-wrap">
+          <canvas id="plumeCanvas" width="1100" height="720" aria-label="Representación 3D de una pluma de contaminación en suelo"></canvas>
+          <div class="badge" id="frameBadge">Semana 0 | crecimiento 0%</div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const canvas = document.getElementById('plumeCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const ui = {
+        time: document.getElementById('timeSlider'),
+        concentration: document.getElementById('concentrationSlider'),
+        infiltration: document.getElementById('infiltrationSlider'),
+        mobility: document.getElementById('mobilitySlider'),
+        groundwater: document.getElementById('groundwaterSlider'),
+        biochar: document.getElementById('biocharCheck'),
+        vegetation: document.getElementById('vegetationCheck'),
+        lime: document.getElementById('limeCheck'),
+        timeValue: document.getElementById('timeValue'),
+        concentrationValue: document.getElementById('concentrationValue'),
+        infiltrationValue: document.getElementById('infiltrationValue'),
+        mobilityValue: document.getElementById('mobilityValue'),
+        groundwaterValue: document.getElementById('groundwaterValue'),
+        lengthMetric: document.getElementById('lengthMetric'),
+        depthMetric: document.getElementById('depthMetric'),
+        distanceMetric: document.getElementById('distanceMetric'),
+        riskMetric: document.getElementById('riskMetric'),
+        remediationMetric: document.getElementById('remediationMetric'),
+        play: document.getElementById('playButton'),
+        reset: document.getElementById('resetButton'),
+        badge: document.getElementById('frameBadge'),
+        camera: document.getElementById('cameraReadout'),
+      };
+
+      const camera = { yaw: 0.66, pitch: 0.42, distance: 5.8 };
+      const pointer = { active: false, x: 0, y: 0 };
+      let playTimer = null;
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function state() {
+        const week = Number(ui.time.value);
+        const growth = 1 - Math.exp(-week / 8.2);
+        const baseConcentration = Number(ui.concentration.value);
+        const baseInfiltration = Number(ui.infiltration.value);
+        const baseMobility = Number(ui.mobility.value);
+        const groundwaterDepth = Number(ui.groundwater.value);
+        const remedies = {
+          biochar: ui.biochar.checked,
+          vegetation: ui.vegetation.checked,
+          lime: ui.lime.checked,
+        };
+        const concentration = baseConcentration * (remedies.biochar ? 0.72 : 1);
+        const infiltration = baseInfiltration * (remedies.vegetation ? 0.62 : 1);
+        const mobilityFactor = (remedies.biochar ? 0.76 : 1) * (remedies.vegetation ? 0.9 : 1) * (remedies.lime ? 0.58 : 1);
+        const mobility = clamp(baseMobility * mobilityFactor, 0.08, 1);
+        const transport = (infiltration / 120) * 0.52 + mobility * 0.48;
+        const length = 1.25 + growth * (2.4 + transport * 3.6);
+        const depth = 0.28 + growth * (0.55 + transport * 2.1);
+        const spread = 0.42 + growth * (0.45 + mobility * 0.82);
+        const intensity = clamp(concentration / 180, 0.12, 1.25);
+        const groundwaterGap = groundwaterDepth - depth;
+        const proximity = clamp(depth / groundwaterDepth, 0, 1.25);
+        const remediationProtection = (remedies.biochar ? 0.08 : 0) + (remedies.vegetation ? 0.07 : 0) + (remedies.lime ? 0.1 : 0);
+        const contactPenalty = depth >= groundwaterDepth ? 0.22 : clamp((proximity - 0.75) / 0.25, 0, 1) * 0.12;
+        const riskScore = clamp(proximity * 0.52 + transport * 0.28 + intensity * 0.12 + contactPenalty - remediationProtection * 0.55, 0, 1);
+        return {
+          week,
+          growth,
+          concentration,
+          baseConcentration,
+          infiltration,
+          baseInfiltration,
+          mobility,
+          baseMobility,
+          groundwaterDepth,
+          groundwaterGap,
+          proximity,
+          remedies,
+          transport,
+          length,
+          depth,
+          spread,
+          intensity,
+          riskScore,
+        };
+      }
+
+      function rotate(point) {
+        const cy = Math.cos(camera.yaw);
+        const sy = Math.sin(camera.yaw);
+        const cp = Math.cos(camera.pitch);
+        const sp = Math.sin(camera.pitch);
+        const x1 = point.x * cy - point.z * sy;
+        const z1 = point.x * sy + point.z * cy;
+        const y1 = point.y * cp - z1 * sp;
+        const z2 = point.y * sp + z1 * cp;
+        return { x: x1, y: y1, z: z2 };
+      }
+
+      function project(point) {
+        const rotated = rotate(point);
+        const scaleBase = Math.min(canvas.width, canvas.height) * 0.62;
+        const perspective = scaleBase / (camera.distance + rotated.z);
+        return {
+          x: canvas.width * 0.52 + rotated.x * perspective,
+          y: canvas.height * 0.43 + rotated.y * perspective,
+          z: rotated.z,
+          s: perspective,
+        };
+      }
+
+      function poly(points, fill, stroke) {
+        const projected = points.map(project);
+        ctx.beginPath();
+        projected.forEach((point, index) => {
+          if (index === 0) ctx.moveTo(point.x, point.y);
+          else ctx.lineTo(point.x, point.y);
+        });
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+        if (stroke) {
+          ctx.strokeStyle = stroke;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+
+      function drawLine(points, color, width = 1, dash = []) {
+        const projected = points.map(project);
+        ctx.save();
+        ctx.setLineDash(dash);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.beginPath();
+        projected.forEach((point, index) => {
+          if (index === 0) ctx.moveTo(point.x, point.y);
+          else ctx.lineTo(point.x, point.y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawSoilBlock() {
+        const x0 = -2.3;
+        const x1 = 2.3;
+        const y0 = -1.45;
+        const y1 = 1.45;
+        const z0 = -1.05;
+        const z1 = 1.05;
+        const faces = [
+          { z: z0, p: [{ x: x0, y: y0, z: z0 }, { x: x1, y: y0, z: z0 }, { x: x1, y: y1, z: z0 }, { x: x0, y: y1, z: z0 }], f: 'rgba(156, 111, 72, 0.58)' },
+          { z: y1, p: [{ x: x0, y: y1, z: z0 }, { x: x1, y: y1, z: z0 }, { x: x1, y: y1, z: z1 }, { x: x0, y: y1, z: z1 }], f: 'rgba(118, 83, 57, 0.42)' },
+          { z: x1, p: [{ x: x1, y: y0, z: z0 }, { x: x1, y: y0, z: z1 }, { x: x1, y: y1, z: z1 }, { x: x1, y: y1, z: z0 }], f: 'rgba(136, 94, 61, 0.48)' },
+          { z: z1, p: [{ x: x0, y: y0, z: z1 }, { x: x1, y: y0, z: z1 }, { x: x1, y: y1, z: z1 }, { x: x0, y: y1, z: z1 }], f: 'rgba(186, 137, 88, 0.34)' },
+          { z: y0, p: [{ x: x0, y: y0, z: z0 }, { x: x1, y: y0, z: z0 }, { x: x1, y: y0, z: z1 }, { x: x0, y: y0, z: z1 }], f: 'rgba(202, 153, 96, 0.72)' },
+        ];
+
+        faces
+          .map((face) => ({ ...face, depth: face.p.reduce((sum, point) => sum + rotate(point).z, 0) / face.p.length }))
+          .sort((a, b) => a.depth - b.depth)
+          .forEach((face) => poly(face.p, face.f, 'rgba(83, 68, 52, 0.28)'));
+
+        for (let i = 0; i <= 6; i += 1) {
+          const x = x0 + (i / 6) * (x1 - x0);
+          drawLine([{ x, y: y0, z: z0 }, { x, y: y0, z: z1 }], 'rgba(83, 68, 52, 0.16)');
+        }
+        for (let i = 0; i <= 4; i += 1) {
+          const z = z0 + (i / 4) * (z1 - z0);
+          drawLine([{ x: x0, y: y0, z }, { x: x1, y: y0, z }], 'rgba(83, 68, 52, 0.16)');
+        }
+      }
+
+      function plumePoint(i, s) {
+        const t = i / 92;
+        const wave = Math.sin(t * 11.4 + 0.6) * 0.16;
+        return {
+          x: -1.78 + t * s.length,
+          y: -1.1 + t * s.depth + Math.sin(t * 5.5) * 0.1,
+          z: wave,
+          t,
+        };
+      }
+
+      function lerpColor(a, b, t) {
+        return a.map((channel, index) => Math.round(channel + (b[index] - channel) * t));
+      }
+
+      function groundwaterColor(riskScore, alpha) {
+        const low = [44, 120, 190];
+        const mid = [39, 145, 100];
+        const high = [183, 59, 53];
+        const t = clamp((riskScore - 0.28) / 0.58, 0, 1);
+        const color = t < 0.5 ? lerpColor(low, mid, t / 0.5) : lerpColor(mid, high, (t - 0.5) / 0.5);
+        return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
+      }
+
+      function drawSaturatedZone(s) {
+        const x0 = -2.3;
+        const x1 = 2.3;
+        const y0 = clamp(-1.45 + (s.groundwaterDepth / 3.2) * 2.9, -0.55, 1.34);
+        const y1 = 1.45;
+        const z0 = -1.05;
+        const z1 = 1.05;
+        const faces = [
+          {
+            p: [{ x: x0, y: y0, z: z0 }, { x: x1, y: y0, z: z0 }, { x: x1, y: y0, z: z1 }, { x: x0, y: y0, z: z1 }],
+            alpha: 0.34,
+          },
+          {
+            p: [{ x: x0, y: y0, z: z1 }, { x: x1, y: y0, z: z1 }, { x: x1, y: y1, z: z1 }, { x: x0, y: y1, z: z1 }],
+            alpha: 0.42,
+          },
+          {
+            p: [{ x: x1, y: y0, z: z0 }, { x: x1, y: y0, z: z1 }, { x: x1, y: y1, z: z1 }, { x: x1, y: y1, z: z0 }],
+            alpha: 0.38,
+          },
+          {
+            p: [{ x: x0, y: y0, z: z0 }, { x: x1, y: y0, z: z0 }, { x: x1, y: y1, z: z0 }, { x: x0, y: y1, z: z0 }],
+            alpha: 0.32,
+          },
+        ];
+
+        faces
+          .map((face) => ({ ...face, depth: face.p.reduce((sum, point) => sum + rotate(point).z, 0) / face.p.length }))
+          .sort((a, b) => a.depth - b.depth)
+          .forEach((face) => poly(face.p, groundwaterColor(s.riskScore, face.alpha), groundwaterColor(s.riskScore, 0.72)));
+      }
+
+      function drawPlume(s) {
+        const particles = [];
+        for (let i = 0; i < 93; i += 1) {
+          const base = plumePoint(i, s);
+          const radius = (0.08 + base.t * s.spread * 0.34) * (0.82 + Math.sin(i * 17.2) * 0.18);
+          const ring = 7 + Math.floor(base.t * 8);
+          for (let j = 0; j < ring; j += 1) {
+            const angle = (j / ring) * Math.PI * 2 + i * 0.42;
+            const shell = 0.35 + ((i * 13 + j * 7) % 100) / 145;
+            const p = {
+              x: base.x + Math.cos(angle) * radius * shell,
+              y: base.y + Math.sin(angle * 0.8) * radius * 0.56 * shell,
+              z: base.z + Math.sin(angle) * radius * shell,
+              t: base.t,
+              edge: shell,
+            };
+            const pr = project(p);
+            const concentration = clamp((1 - base.t * 0.72) * s.intensity, 0.05, 1);
+            particles.push({ ...pr, t: base.t, edge: shell, concentration });
+          }
+        }
+
+        particles.sort((a, b) => a.z - b.z);
+        particles.forEach((p) => {
+          const core = p.edge < 0.68 && p.t < 0.7;
+          const alpha = clamp((core ? 0.34 : 0.2) * p.concentration + 0.04, 0.04, 0.48);
+          const hue = core ? '23, 111, 190' : '31, 155, 103';
+          const r = clamp(p.s * (core ? 0.12 : 0.1), 2.2, 10.5);
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+          g.addColorStop(0, `rgba(${hue}, ${alpha})`);
+          g.addColorStop(1, `rgba(${hue}, 0)`);
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        const nose = plumePoint(92, s);
+        drawLine(
+          [
+            { x: -1.78, y: -1.08, z: 0 },
+            { x: nose.x, y: nose.y, z: nose.z },
+          ],
+          'rgba(18, 101, 169, 0.7)',
+          2.2,
+          [6, 6]
+        );
+      }
+
+      function drawSource() {
+        const top = project({ x: -1.82, y: -1.42, z: 0 });
+        ctx.fillStyle = '#176fbe';
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(top.x, top.y, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 12px Inter, Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Cd', top.x, top.y + 4);
+        ctx.textAlign = 'start';
+      }
+
+      function drawAxes() {
+        const origin = { x: -2.45, y: 1.62, z: -1.18 };
+        drawLine([origin, { x: -1.45, y: 1.62, z: -1.18 }], '#5c6d78', 1.4);
+        drawLine([origin, { x: -2.45, y: 0.62, z: -1.18 }], '#5c6d78', 1.4);
+        drawLine([origin, { x: -2.45, y: 1.62, z: -0.18 }], '#5c6d78', 1.4);
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const width = Math.max(720, Math.floor(rect.width * dpr));
+        const height = Math.max(520, Math.floor(rect.height * dpr));
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+      }
+
+      function render() {
+        resizeCanvas();
+        const s = state();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        bg.addColorStop(0, '#f8fbfd');
+        bg.addColorStop(1, '#e8eff5');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        drawSoilBlock();
+        drawSaturatedZone(s);
+        drawPlume(s);
+        drawSource();
+        drawAxes();
+        updateText(s);
+      }
+
+      function updateText(s) {
+        const growthPct = Math.round(s.growth * 100);
+        const activeRemedies = [
+          s.remedies.biochar ? 'Biochar' : '',
+          s.remedies.vegetation ? 'Cobertura vegetal' : '',
+          s.remedies.lime ? 'Cal' : '',
+        ].filter(Boolean);
+        ui.timeValue.textContent = `${s.week} semanas`;
+        ui.concentrationValue.textContent = activeRemedies.length ? `${s.baseConcentration} -> ${s.concentration.toFixed(0)} mg/kg` : `${s.baseConcentration} mg/kg`;
+        ui.infiltrationValue.textContent = activeRemedies.length ? `${s.baseInfiltration} -> ${s.infiltration.toFixed(0)} mm/sem` : `${s.baseInfiltration} mm/sem`;
+        ui.mobilityValue.textContent = activeRemedies.length ? `${s.baseMobility.toFixed(2)} -> ${s.mobility.toFixed(2)}` : s.mobility.toFixed(2);
+        ui.groundwaterValue.textContent = `${s.groundwaterDepth.toFixed(1)} m`;
+        ui.lengthMetric.textContent = `${s.length.toFixed(1)} m`;
+        ui.depthMetric.textContent = `${s.depth.toFixed(1)} m`;
+        ui.distanceMetric.textContent = s.groundwaterGap > 0 ? `${s.groundwaterGap.toFixed(1)} m` : 'Contacto';
+        ui.riskMetric.textContent = s.riskScore > 0.68 ? 'Alto' : s.riskScore > 0.42 ? 'Medio' : 'Bajo';
+        ui.remediationMetric.textContent = activeRemedies.length ? activeRemedies.join(' + ') : 'Ninguna';
+        ui.badge.textContent = `Semana ${s.week} | crecimiento ${growthPct}%`;
+        ui.camera.textContent = `azimut ${Math.round((camera.yaw * 180) / Math.PI)}°, elevación ${Math.round((camera.pitch * 180) / Math.PI)}°`;
+      }
+
+      function scheduleRender() {
+        requestAnimationFrame(render);
+      }
+
+      function stop() {
+        if (playTimer) {
+          clearInterval(playTimer);
+          playTimer = null;
+        }
+        ui.play.textContent = 'Animar';
+      }
+
+      [ui.time, ui.concentration, ui.infiltration, ui.mobility, ui.groundwater, ui.biochar, ui.vegetation, ui.lime].forEach((input) => {
+        input.addEventListener('input', () => {
+          if (input === ui.time) stop();
+          scheduleRender();
+        });
+      });
+
+      ui.play.addEventListener('click', () => {
+        if (playTimer) {
+          stop();
+          return;
+        }
+        ui.play.textContent = 'Pausar';
+        playTimer = setInterval(() => {
+          const next = Number(ui.time.value) + 1;
+          ui.time.value = next > Number(ui.time.max) ? 0 : String(next);
+          render();
+        }, 520);
+      });
+
+      ui.reset.addEventListener('click', () => {
+        stop();
+        camera.yaw = 0.66;
+        camera.pitch = 0.42;
+        ui.time.value = '8';
+        ui.groundwater.value = '2.5';
+        ui.biochar.checked = false;
+        ui.vegetation.checked = false;
+        ui.lime.checked = false;
+        render();
+      });
+
+      canvas.addEventListener('pointerdown', (event) => {
+        pointer.active = true;
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+        canvas.classList.add('dragging');
+        canvas.setPointerCapture(event.pointerId);
+      });
+
+      canvas.addEventListener('pointermove', (event) => {
+        if (!pointer.active) return;
+        const dx = event.clientX - pointer.x;
+        const dy = event.clientY - pointer.y;
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+        camera.yaw += dx * 0.008;
+        camera.pitch = clamp(camera.pitch + dy * 0.006, -0.12, 1.12);
+        render();
+      });
+
+      canvas.addEventListener('pointerup', (event) => {
+        pointer.active = false;
+        canvas.classList.remove('dragging');
+        canvas.releasePointerCapture(event.pointerId);
+      });
+
+      canvas.addEventListener('pointercancel', () => {
+        pointer.active = false;
+        canvas.classList.remove('dragging');
+      });
+
+      window.addEventListener('resize', scheduleRender);
+      render();
+    </script>
+  </body>
+</html>
