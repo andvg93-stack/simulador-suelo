@@ -8,113 +8,214 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    <header>
-      <h1 id="appTitle">Soil Contamination Simulator (Cd)</h1>
-      <p id="appSubtitle">Explore how pH, texture, organic matter, and water control contaminant mobility.</p>
-    </header>
+    <div class="simulation-toolbar panel" aria-label="Simulation controls">
+      <div class="toolbar-controls">
+        <label class="lang-switch" title="Switch language / Cambiar idioma">
+          <input type="checkbox" id="languageToggle" />
+          <span id="languageLabel" data-i18n-es="Idioma: Espanol" data-i18n-en="Language: English">Idioma: Espanol</span>
+        </label>
 
-    <main class="layout">
-      <aside class="panel controls">
-        <h2 id="controlsTitle">Controls</h2>
-        <label class="toggle language-toggle"><input type="checkbox" id="spanishToggle" /> <span id="spanishToggleLabel">Spanish</span></label>
+        <label class="switch-row compact" title="Enable side-by-side scenario comparison.">
+          <input type="checkbox" id="compareToggle" />
+          <span data-i18n-es="Comparar A vs B" data-i18n-en="Compare A vs B">Comparar A vs B</span>
+        </label>
 
-        <section>
-          <h3 id="soilGroupTitle">Soil</h3>
-          <label title="Particle composition affects sorption and flow."><span id="textureLabel">Texture</span>
+        <button id="freezeBBtn" type="button" data-i18n-es="Congelar B Semana 1" data-i18n-en="Freeze B at Week 1">Congelar B Semana 1</button>
+        <button id="resetBBtn" type="button" class="secondary" data-i18n-es="Reset B" data-i18n-en="Reset B">Reset B</button>
+
+        <button id="playBtn" type="button" data-i18n-es="Correr" data-i18n-en="Play">Correr</button>
+        <button id="pauseBtn" type="button" class="secondary" data-i18n-es="Pausar" data-i18n-en="Pause">Pausar</button>
+        <button id="stepBtn" type="button" class="secondary" data-i18n-es="Paso" data-i18n-en="Step">Paso</button>
+        <button id="resetBtn" type="button" class="secondary" data-i18n-es="Reiniciar" data-i18n-en="Reset">Reiniciar</button>
+        <button id="exportBtn" type="button" class="secondary" data-i18n-es="Exportar JSON" data-i18n-en="Export JSON">Exportar JSON</button>
+      </div>
+
+      <div class="toolbar-week">
+        <span id="weekLabelText" data-i18n-es="Semana" data-i18n-en="Week">Semana</span>
+        <span class="field-value" id="weekLabel">0</span>
+        <input type="range" id="weekSlider" min="0" max="12" step="1" value="0" />
+      </div>
+
+      <div class="lock-status unlocked" id="bLockStatus">B desbloqueado</div>
+    </div>
+
+    <main class="app-layout">
+      <aside class="panel controls-panel" aria-label="Controls">
+        <h2 data-i18n-es="Controles" data-i18n-en="Controls">Controles</h2>
+
+        <section class="control-group compact-grid">
+          <h3 data-i18n-es="Suelo" data-i18n-en="Soil">Suelo</h3>
+
+          <label class="control-field" title="Texture controls sorption and flow pathways.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Textura" data-i18n-en="Texture">Textura</span></span>
             <select id="texture">
-              <option value="Sandy">Sandy</option>
-              <option value="Loam" selected>Loam</option>
-              <option value="Clay">Clay</option>
+              <option value="Sandy" data-i18n-es="Arenoso" data-i18n-en="Sandy">Arenoso</option>
+              <option value="Loam" selected data-i18n-es="Franco" data-i18n-en="Loam">Franco</option>
+              <option value="Clay" data-i18n-es="Arcilloso" data-i18n-en="Clay">Arcilloso</option>
             </select>
           </label>
-          <label title="More organic matter usually binds more Cd."><span id="organicMatterLabel">Organic Matter (%)</span> <span id="organicMatterVal"></span>
+
+          <label class="control-field" title="Higher organic matter tends to bind more Cd.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Materia organica (%)" data-i18n-en="Organic Matter (%)">Materia organica (%)</span><span class="field-value" id="organicMatterVal">3.0</span></span>
             <input type="range" id="organicMatter" min="0" max="10" step="0.5" value="3" />
           </label>
-          <label title="Lower pH increases Cd solubility."><span id="pHLabel">pH</span> <span id="pHVal"></span>
+
+          <label class="control-field" title="Low pH increases Cd solubility and mobility.">
+            <span class="field-row"><span class="field-label">pH</span><span class="field-value" id="pHVal">5.5</span></span>
             <input type="range" id="pH" min="4" max="8.5" step="0.1" value="5.5" />
           </label>
-          <label title="Cation exchange capacity influences adsorption."><span id="cecLabel">CEC (cmol(+)/kg)</span>
-            <input type="number" id="cec" disabled />
+
+          <label class="control-field" title="CEC indicates ion exchange capacity and adsorption potential.">
+            <span class="field-row"><span class="field-label">CEC (cmol(+)/kg)</span></span>
+            <input type="number" id="cec" step="0.1" disabled />
           </label>
-          <label class="toggle"><input type="checkbox" id="advancedCEC" /> <span id="advancedModeLabel">Advanced Mode (manual CEC)</span></label>
+
+          <label class="switch-row" title="Enable manual CEC override.">
+            <input type="checkbox" id="advancedCEC" />
+            <span data-i18n-es="CEC avanzada" data-i18n-en="Advanced CEC">CEC avanzada</span>
+          </label>
         </section>
 
-        <section>
-          <h3 id="hydrologyGroupTitle">Hydrology</h3>
-          <label title="Weekly water input driving percolation."><span id="rainfallLabel">Rainfall/Irrigation (mm/week)</span> <span id="rainfallVal"></span>
+        <section class="control-group compact-grid">
+          <h3 data-i18n-es="Hidrologia" data-i18n-en="Hydrology">Hidrologia</h3>
+
+          <label class="control-field" title="Rainfall and irrigation drive percolation.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Lluvia-Riego (mm/semana)" data-i18n-en="Rainfall-Irrigation (mm/week)">Lluvia-Riego (mm/semana)</span><span class="field-value" id="rainfallVal">40</span></span>
             <input type="range" id="rainfall" min="0" max="120" step="5" value="40" />
           </label>
-          <label title="Higher permeability can increase downward transport."><span id="permeabilityLabel">Permeability</span>
+
+          <label class="control-field" title="Higher permeability usually increases downward transport.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Permeabilidad" data-i18n-en="Permeability">Permeabilidad</span></span>
             <select id="permeability">
-              <option value="Low">Low</option>
-              <option value="Medium" selected>Medium</option>
-              <option value="High">High</option>
+              <option value="Low" data-i18n-es="Baja" data-i18n-en="Low">Baja</option>
+              <option value="Medium" selected data-i18n-es="Media" data-i18n-en="Medium">Media</option>
+              <option value="High" data-i18n-es="Alta" data-i18n-en="High">Alta</option>
             </select>
           </label>
-          <label title="Shallow groundwater is more vulnerable."><span id="groundwaterDepthLabel">Groundwater depth (m)</span> <span id="groundwaterDepthVal"></span>
+
+          <label class="control-field" title="Shallow groundwater is more vulnerable.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Profundidad agua subterranea (m)" data-i18n-en="Groundwater depth (m)">Profundidad agua subterranea (m)</span><span class="field-value" id="groundwaterDepthVal">3.0</span></span>
             <input type="range" id="groundwaterDepth" min="0.5" max="10" step="0.5" value="3" />
           </label>
         </section>
 
-        <section>
-          <h3 id="contaminationGroupTitle">Contamination</h3>
-          <label title="Initial Cd concentration in contaminated zone."><span id="initialConcentrationLabel">Initial concentration (mg/kg)</span> <span id="initialConcentrationVal"></span>
+        <section class="control-group compact-grid">
+          <h3 data-i18n-es="Contaminacion" data-i18n-en="Contamination">Contaminacion</h3>
+
+          <label class="control-field" title="Initial concentration sets baseline contaminant mass.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Concentracion inicial (mg/kg)" data-i18n-en="Initial concentration (mg/kg)">Concentracion inicial (mg/kg)</span><span class="field-value" id="initialConcentrationVal">60</span></span>
             <input type="range" id="initialConcentration" min="0" max="200" step="5" value="60" />
           </label>
-          <label title="Depth of contaminated soil affects transfer to deeper layers."><span id="contaminatedDepthLabel">Contaminated depth</span>
-            <select id="contaminatedDepth">
-              <option value="0-20" selected>0–20 cm</option>
-              <option value="0-40">0–40 cm</option>
-            </select>
-          </label>
-        </section>
 
-        <section>
-          <h3 id="interventionsGroupTitle">Interventions</h3>
-          <label><span id="interventionLabel">Intervention</span>
-            <select id="intervention">
-              <option value="None" selected>None</option>
-              <option value="Lime">Lime</option>
-              <option value="BiocharCompost">Biochar/Compost</option>
-              <option value="VegetativeCover">Vegetative cover</option>
+          <label class="control-field" title="Deeper contaminated zone can increase transfer to deep soil.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Profundidad contaminada" data-i18n-en="Contaminated depth">Profundidad contaminada</span></span>
+            <select id="contaminatedDepth">
+              <option value="0-20" selected>0-20 cm</option>
+              <option value="0-40">0-40 cm</option>
             </select>
           </label>
-          <label id="limeDoseWrap" class="conditional"><span id="limeDoseLabel">Lime dose</span> <span id="limeDoseVal"></span>
+
+          <label class="control-field" title="Interventions change Cd partitioning and mobility.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Intervencion" data-i18n-en="Intervention">Intervencion</span></span>
+            <select id="intervention">
+              <option value="None" data-i18n-es="Ninguna" data-i18n-en="None">Ninguna</option>
+              <option value="Lime" data-i18n-es="Cal" data-i18n-en="Lime">Cal</option>
+              <option value="BiocharCompost" data-i18n-es="Biochar-Compost" data-i18n-en="Biochar-Compost">Biochar-Compost</option>
+              <option value="VegetativeCover" data-i18n-es="Cobertura vegetal" data-i18n-en="Vegetative cover">Cobertura vegetal</option>
+            </select>
+          </label>
+
+          <label class="control-field conditional" id="limeDoseWrap" title="Lime raises pH over time.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Dosis cal" data-i18n-en="Lime dose">Dosis cal</span><span class="field-value" id="limeDoseVal">0.0</span></span>
             <input type="range" id="limeDose" min="0" max="5" step="0.5" value="0" />
           </label>
-          <label id="biocharDoseWrap" class="conditional"><span id="biocharDoseLabel">Biochar/Compost dose</span> <span id="biocharDoseVal"></span>
+
+          <label class="control-field conditional" id="biocharDoseWrap" title="Biochar-compost increases adsorption capacity.">
+            <span class="field-row"><span class="field-label" data-i18n-es="Dosis biochar" data-i18n-en="Biochar dose">Dosis biochar</span><span class="field-value" id="biocharDoseVal">0.0</span></span>
             <input type="range" id="biocharDose" min="0" max="5" step="0.5" value="0" />
           </label>
         </section>
-
-        <div class="buttons">
-          <button id="runBtn">Run Simulation</button>
-          <button id="stepBtn">Step Forward</button>
-          <button id="resetBtn">Reset</button>
-          <button id="exportBtn">Export Results</button>
-        </div>
       </aside>
 
-      <section class="panel viz">
-        <h2 id="vizTitle">2D Soil Visualization</h2>
-        <canvas id="soilCanvas" width="460" height="520"></canvas>
+      <section class="panel process-panel" aria-label="Process visualization">
+        <h2 data-i18n-es="Vista de proceso" data-i18n-en="Process view">Vista de proceso</h2>
+        <p class="panel-subtitle" data-i18n-es="Parametros fisicoquimicos -> procesos -> resultados" data-i18n-en="Physical-chemical parameters -> processes -> results">Parametros fisicoquimicos -> procesos -> resultados</p>
+
+        <div class="profile-grid" id="profileGrid">
+          <article class="profile-card" id="profileACard">
+            <h3 id="profileATitle">Escenario A</h3>
+            <canvas id="soilCanvasA" width="520" height="620"></canvas>
+          </article>
+
+          <article class="profile-card" id="profileBCard">
+            <h3 id="profileBTitle">Escenario B (bloqueo semana 1)</h3>
+            <canvas id="soilCanvasB" width="520" height="620"></canvas>
+          </article>
+        </div>
+
+        <div class="profile-legend" aria-label="Fraction legend">
+          <span><i class="swatch dissolved"></i><span data-i18n-es="Disuelto" data-i18n-en="Dissolved">Disuelto</span></span>
+          <span><i class="swatch adsorbed"></i><span data-i18n-es="Adsorbido" data-i18n-en="Adsorbed">Adsorbido</span></span>
+          <span><i class="swatch immobilized"></i><span data-i18n-es="Inmovilizado" data-i18n-en="Immobilized">Inmovilizado</span></span>
+          <span><i class="line-swatch"></i><span data-i18n-es="Agua subterranea" data-i18n-en="Groundwater">Agua subterranea</span></span>
+        </div>
       </section>
 
-      <aside class="panel results">
-        <h2 id="resultsTitle">Results</h2>
-        <div class="indicators">
-          <div class="indicator" id="mobilityIndicator"><span id="mobilityText">Mobility</span>: <strong>-</strong></div>
-          <div class="indicator" id="bioIndicator"><span id="bioavailabilityText">Bioavailability</span>: <strong>-</strong></div>
-          <div class="indicator" id="gwIndicator"><span id="groundwaterRiskText">Groundwater Risk</span>: <strong>-</strong></div>
+      <aside class="panel results-panel" aria-label="Results">
+        <h2 data-i18n-es="Panel de resultados" data-i18n-en="Results dashboard">Panel de resultados</h2>
+
+        <div class="kpi-grid">
+          <article class="kpi-card">
+            <h3 data-i18n-es="Movilidad" data-i18n-en="Mobility">Movilidad</h3>
+            <div class="kpi-row"><span>A</span><span id="kpiMobA" class="kpi-pill low">Low</span></div>
+            <div class="kpi-row compare-only"><span>B</span><span id="kpiMobB" class="kpi-pill">-</span></div>
+          </article>
+
+          <article class="kpi-card">
+            <h3 data-i18n-es="Biodisponibilidad" data-i18n-en="Bioavailability">Biodisponibilidad</h3>
+            <div class="kpi-row"><span>A</span><span id="kpiBioA" class="kpi-pill low">Low</span></div>
+            <div class="kpi-row compare-only"><span>B</span><span id="kpiBioB" class="kpi-pill">-</span></div>
+          </article>
+
+          <article class="kpi-card">
+            <h3 data-i18n-es="Riesgo acuifero" data-i18n-en="Groundwater risk">Riesgo acuifero</h3>
+            <div class="kpi-row"><span>A</span><span id="kpiGwA" class="kpi-pill low">Low</span></div>
+            <div class="kpi-row compare-only"><span>B</span><span id="kpiGwB" class="kpi-pill">-</span></div>
+          </article>
         </div>
 
-        <canvas id="concChart"></canvas>
-        <canvas id="fractionChart"></canvas>
+        <section class="dominant-panel">
+          <h3 data-i18n-es="Proceso dominante" data-i18n-en="Dominant process">Proceso dominante</h3>
+          <div class="dominant-grid">
+            <article class="dominant-card">
+              <h4>A</h4>
+              <div class="dominant-name" id="dominantAName">-</div>
+              <div class="dominant-pct" id="dominantAPct">-</div>
+              <p id="dominantAExplain">-</p>
+            </article>
+            <article class="dominant-card compare-only" id="dominantBCard">
+              <h4>B</h4>
+              <div class="dominant-name" id="dominantBName">-</div>
+              <div class="dominant-pct" id="dominantBPct">-</div>
+              <p id="dominantBExplain">-</p>
+            </article>
+          </div>
+        </section>
 
-        <div class="explanation">
-          <h3 id="explanationTitle">Auto-Explanation</h3>
+        <section class="chart-panel">
+          <h3 data-i18n-es="Concentracion vs semana" data-i18n-en="Concentration vs week">Concentracion vs semana</h3>
+          <canvas id="concChart" aria-label="Concentration chart"></canvas>
+        </section>
+
+        <section class="chart-panel">
+          <h3 data-i18n-es="Fracciones apiladas" data-i18n-en="Stacked fractions">Fracciones apiladas</h3>
+          <canvas id="fractionChart" aria-label="Fraction chart"></canvas>
+        </section>
+
+        <section class="explanation-panel">
+          <h3 data-i18n-es="Explicacion automatica" data-i18n-en="Auto explanation">Explicacion automatica</h3>
           <ul id="explanationList"></ul>
-        </div>
+        </section>
       </aside>
     </main>
 

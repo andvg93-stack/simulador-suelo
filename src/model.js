@@ -63,22 +63,34 @@ export function simulateWeek(prev, params) {
 
   const fractions = partitionFractions(next, params);
   const percolationFactor = PERMEABILITY_FACTOR[params.permeability] ?? 1;
-  const leachingRate = clamp(0.005 + (params.rainfall / 120) * 0.06 * percolationFactor, 0.001, 0.12);
+  const baseLeachingRate = 0.005 + (params.rainfall / 120) * 0.06 * percolationFactor;
+
+  // Vegetative cover dampens effective downward mobilization by intercepting
+  // part of rainfall energy and stabilizing near-surface transport pathways.
+  const coverLeachingReduction = params.intervention === 'VegetativeCover'
+    ? clamp(0.12 + (params.rainfall / 120) * 0.15, 0.12, 0.3)
+    : 0;
+  const leachingRate = clamp(baseLeachingRate * (1 - coverLeachingReduction), 0.001, 0.12);
 
   const availableForLeach = next.surfaceConc * fractions.dissolved;
   const leached = clamp(availableForLeach * leachingRate, 0, next.surfaceConc);
 
-  const attenuation = clamp(0.012 + fractions.immobilized * 0.03, 0, 0.08);
+  const coverRetentionBonus = params.intervention === 'VegetativeCover' ? 0.006 : 0;
+  const attenuation = clamp(0.012 + fractions.immobilized * 0.03 + coverRetentionBonus, 0, 0.08);
   const retainedInSurface = clamp(next.surfaceConc * attenuation, 0, next.surfaceConc - leached);
 
   next.surfaceConc = clamp(next.surfaceConc - leached - retainedInSurface, 0, 500);
-  const deepGain = leached * (params.contaminatedDepth === '0-40' ? 0.7 : 0.9);
+  // A deeper contaminated layer (0-40 cm) is closer to the modeled deep zone,
+  // so a larger share of leached Cd contributes to deep concentration.
+  const deepGain = leached * (params.contaminatedDepth === '0-40' ? 1.02 : 0.88);
   const deepLoss = next.deepConc * clamp(0.01 * percolationFactor, 0.005, 0.04);
   next.deepConc = clamp(next.deepConc + deepGain - deepLoss, 0, 500);
 
   const mobilityScore = clamp(fractions.dissolved * 0.75 + leachingRate * 2.3, 0, 1);
   const bioavailabilityScore = clamp(fractions.dissolved * 0.65 + (6.8 - next.pH) * 0.08, 0, 1);
-  const gwDepthFactor = clamp((4 - params.groundwaterDepth) / 4, 0, 1);
+  // Continuous groundwater-depth influence across 0.5-10 m
+  // (high impact when shallow, gradually decaying with depth).
+  const gwDepthFactor = clamp(Math.exp(-(params.groundwaterDepth - 0.5) / 2.3), 0, 1);
   const gwRiskScore = clamp(next.deepConc / 80 + mobilityScore * 0.4 + gwDepthFactor * 0.45, 0, 1.6);
 
   next.week += 1;
@@ -92,9 +104,9 @@ export function simulateWeek(prev, params) {
 }
 
 function levelFromScore(score) {
-  if (score < 0.33) return 'low';
-  if (score < 0.66) return 'medium';
-  return 'high';
+  if (score < 0.33) return 'Low';
+  if (score < 0.66) return 'Medium';
+  return 'High';
 }
 
 export function getIndicators(state) {
@@ -128,41 +140,28 @@ export function runSimulation(rawParams) {
   return { params, states };
 }
 
-export function explainChanges(prev, current, params, language = 'en') {
-  const es = language === 'es';
+export function explainChanges(prev, current, params) {
   const bullets = [];
   if (current.week === 0) {
-    bullets.push(es ? 'Semana 0 cargada. Ajusta los controles y ejecuta para explorar resultados.' : 'Week 0 baseline loaded. Adjust controls and run to explore outcomes.');
+    bullets.push('Week 0 baseline loaded. Adjust controls and run to explore outcomes.');
     return bullets;
   }
   if (current.surfaceConc < prev.surfaceConc) {
-    bullets.push(es
-      ? `La concentración superficial bajó de ${prev.surfaceConc.toFixed(1)} a ${current.surfaceConc.toFixed(1)} mg/kg por lixiviación y retención.`
-      : `Surface concentration fell from ${prev.surfaceConc.toFixed(1)} to ${current.surfaceConc.toFixed(1)} mg/kg due to leaching and retention.`);
+    bullets.push(`Surface concentration fell from ${prev.surfaceConc.toFixed(1)} to ${current.surfaceConc.toFixed(1)} mg/kg due to leaching and retention.`);
   }
   if (current.deepConc > prev.deepConc) {
-    bullets.push(es
-      ? `La concentración profunda aumentó a ${current.deepConc.toFixed(1)} mg/kg porque el Cd disuelto se movió hacia abajo.`
-      : `Deep soil concentration increased to ${current.deepConc.toFixed(1)} mg/kg as dissolved Cd moved downward.`);
+    bullets.push(`Deep soil concentration increased to ${current.deepConc.toFixed(1)} mg/kg as dissolved Cd moved downward.`);
   }
   if (params.intervention === 'Lime') {
-    bullets.push(es
-      ? `La dosis de cal elevó el pH a ${current.pH.toFixed(2)}, reduciendo el Cd disuelto y la movilidad.`
-      : `Lime dose raised pH to ${current.pH.toFixed(2)}, which reduced dissolved Cd and mobility.`);
+    bullets.push(`Lime dose raised pH to ${current.pH.toFixed(2)}, which reduced dissolved Cd and mobility.`);
   }
   if (params.intervention === 'BiocharCompost') {
-    bullets.push(es
-      ? 'Biochar/compost aumentó la capacidad de adsorción, moviendo Cd de la fase disuelta a la adsorbida.'
-      : 'Biochar/compost increased adsorption capacity, shifting Cd from dissolved to adsorbed pools.');
+    bullets.push('Biochar/compost increased adsorption capacity, shifting Cd from dissolved to adsorbed pools.');
   }
   if (params.intervention === 'VegetativeCover') {
-    bullets.push(es
-      ? 'La cobertura vegetal reduce la erosión superficial, pero la lixiviación depende sobre todo del flujo de agua y la permeabilidad.'
-      : 'Vegetative cover reduces erosion risk, but leaching remains controlled mainly by water flow and permeability.');
+    bullets.push('Vegetative cover reduced effective leaching and increased near-surface retention, limiting transfer to deeper soil.');
   }
-  bullets.push(es
-    ? 'Compensación: mayor inmovilización reduce bioaccesibilidad, pero puede dejar una reserva residual de contaminante en el suelo.'
-    : 'Trade-off: stronger immobilization lowers bioavailability but may leave a long-term residual contaminant stock in soil.');
+  bullets.push(`Trade-off: stronger immobilization lowers bioavailability but may leave a long-term residual contaminant stock in soil.`);
 
   return bullets.slice(0, 5);
 }
