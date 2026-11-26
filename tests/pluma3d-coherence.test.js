@@ -1,37 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { plumeState } from '../src/plume-model.js';
+import { plumeShell, terrain } from '../src/plume-renderer.js';
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function plumeState({
-  week = 8,
-  concentration: baseConcentration = 90,
-  infiltration: baseInfiltration = 55,
-  mobility: baseMobility = 0.58,
-  groundwaterDepth = 2.5,
-  biochar = false,
-  vegetation = false,
-  lime = false,
-} = {}) {
-  const growth = 1 - Math.exp(-week / 8.2);
-  const concentration = baseConcentration * (biochar ? 0.72 : 1);
-  const infiltration = baseInfiltration * (vegetation ? 0.62 : 1);
-  const mobilityFactor = (biochar ? 0.76 : 1) * (vegetation ? 0.9 : 1) * (lime ? 0.58 : 1);
-  const mobility = clamp(baseMobility * mobilityFactor, 0.08, 1);
-  const transport = (infiltration / 120) * 0.52 + mobility * 0.48;
-  const depth = 0.28 + growth * (0.55 + transport * 2.1);
-  const intensity = clamp(concentration / 180, 0.12, 1.25);
-  const groundwaterGap = groundwaterDepth - depth;
-  const proximity = clamp(depth / groundwaterDepth, 0, 1.25);
-  const remediationProtection = (biochar ? 0.08 : 0) + (vegetation ? 0.07 : 0) + (lime ? 0.1 : 0);
-  const contactPenalty = depth >= groundwaterDepth ? 0.22 : clamp((proximity - 0.75) / 0.25, 0, 1) * 0.12;
-  const riskScore = clamp(proximity * 0.52 + transport * 0.28 + intensity * 0.12 + contactPenalty - remediationProtection * 0.55, 0, 1);
-  const riskLevel = riskScore > 0.68 ? 'Alto' : riskScore > 0.42 ? 'Medio' : 'Bajo';
-
-  return { depth, groundwaterGap, riskScore, riskLevel };
-}
+test('the plume fits the soil volume and agrees with the reported reach and maximum depth', () => {
+  for (const scenario of [
+    plumeState({ week: 0 }),
+    plumeState({ week: 24, concentration: 220, infiltration: 120, mobility: 1, groundwaterDepth: 1 }),
+    plumeState({ week: 24, infiltration: 120, mobility: 1, biochar: true, vegetation: true, lime: true }),
+  ]) {
+    const outer = plumeShell(scenario, 0);
+    const inner = plumeShell(scenario, .77);
+    assert.ok([...outer, ...inner].every(({ x, y, z }) =>
+      x >= 0 && x <= terrain.width && y >= 0 && y <= terrain.depth && z >= 0 && z <= terrain.breadth));
+    const xs = outer.map(p => p.x);
+    assert.ok(Math.abs(Math.max(...xs) - Math.min(...xs) - scenario.length) < 1e-6);
+    assert.ok(Math.abs(Math.max(...outer.map(p => p.y)) - scenario.depth) < 1e-6);
+  }
+});
 
 test('three remediation methods reduce risk but do not hide a plume close to groundwater', () => {
   const scenario = plumeState({
