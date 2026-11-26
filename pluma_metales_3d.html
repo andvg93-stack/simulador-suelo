@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pluma 3D · Simulador de contaminación del suelo</title>
     <link rel="stylesheet" href="./pluma-3d.css" />
-    <script type="module" src="./src/plume-view.js?v=volume-1"></script>
+    <script type="module" src="./src/plume-view.js?v=depth-risk-1"></script>
   </head>
   <body>
     <header class="masthead">
@@ -33,7 +33,7 @@
           </div>
           <ul class="legend" aria-label="Leyenda">
             <li><i class="key-plume" aria-hidden="true"></i> Pluma de Cd</li>
-            <li><i class="key-water" aria-hidden="true"></i> Nivel freático</li>
+            <li><i class="key-water" id="waterRiskSwatch" aria-hidden="true"></i> Nivel freático</li>
             <li><i class="key-flow" aria-hidden="true"></i> Infiltración</li>
           </ul>
           <p id="sceneError" class="scene-error" hidden>El navegador no pudo activar el visor 3D.</p>
@@ -57,7 +57,7 @@
           <div><dt>Distancia al agua</dt><dd id="distanceMetric">—</dd></div>
           <div class="risk-metric"><dt>Riesgo relativo</dt><dd id="riskMetric">—</dd></div>
         </dl>
-        <p class="model-note">Modelo conceptual para explorar escenarios de contaminación y tratamiento.</p>
+        <p class="model-note">Modelo conceptual. El agua pasa de azul a rojo según el riesgo relativo.</p>
       </section>
 
       <aside class="scenario" aria-labelledby="scenarioTitle">

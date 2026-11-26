@@ -1,5 +1,5 @@
-import { clamp, plumeState } from './plume-model.js';
-import { createTerrainRenderer } from './plume-renderer.js?v=volume-1';
+import { clamp, plumeState } from './plume-model.js?v=depth-risk-1';
+import { createTerrainRenderer, groundwaterRiskColor } from './plume-renderer.js?v=depth-risk-1';
 
 const byId = (id) => document.getElementById(id);
 const canvas = byId('plumeCanvas');
@@ -8,6 +8,7 @@ const time = byId('timeSlider');
 const play = byId('playButton');
 const zoomIn = byId('zoomIn');
 const zoomOut = byId('zoomOut');
+const waterRiskSwatch = byId('waterRiskSwatch');
 const fields = [
   { input: byId('concentrationSlider'), value: byId('concentrationValue'), effect: byId('concentrationEffect'), key: 'concentration', unit: ' mg/kg', digits: 0 },
   { input: byId('infiltrationSlider'), value: byId('infiltrationValue'), effect: byId('infiltrationEffect'), key: 'infiltration', unit: ' mm/sem', digits: 0 },
@@ -72,6 +73,7 @@ function updateScenario() {
   metrics.distance.textContent = current.groundwaterGap > 0 ? format(current.groundwaterGap) + ' m' : 'Contacto';
   metrics.risk.textContent = current.riskLevel;
   metrics.risk.dataset.risk = current.riskLevel;
+  waterRiskSwatch.style.backgroundColor = 'rgb(' + groundwaterRiskColor(current.riskScore).join(', ') + ')';
   scheduleScene();
 }
 

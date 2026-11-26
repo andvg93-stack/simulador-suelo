@@ -19,7 +19,11 @@ export function plumeState({
   const mobility = clamp(baseMobility * mobilityFactor, 0.08, 1);
   const transport = (infiltration / 120) * 0.52 + mobility * 0.48;
   const length = 1.25 + growth * (2.4 + transport * 3.6);
-  const depth = 0.28 + growth * (0.55 + transport * 2.1);
+  // Sustained high infiltration and mobility drive additional vertical transport.
+  const elapsed = clamp(week / 24, 0, 1);
+  const verticalTransport = clamp(infiltration / 120, 0, 1) * mobility;
+  const deepMigration = 1.8 * elapsed ** 1.5 * verticalTransport ** 3;
+  const depth = 0.28 + growth * (0.55 + transport * 2.1) + deepMigration;
   const spread = 0.42 + growth * (0.45 + mobility * 0.82);
   const intensity = clamp(concentration / 180, 0.12, 1.25);
   const groundwaterGap = groundwaterDepth - depth;
