@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { plumeState } from '../src/plume-model.js';
-import { plumeShell, terrain } from '../src/plume-renderer.js';
+import { createPlumeField, terrain, tracePlume } from '../src/plume-volume.js';
 
 test('the plume fits the soil volume and agrees with the reported reach and maximum depth', () => {
   for (const scenario of [
@@ -9,14 +9,31 @@ test('the plume fits the soil volume and agrees with the reported reach and maxi
     plumeState({ week: 24, concentration: 220, infiltration: 120, mobility: 1, groundwaterDepth: 1 }),
     plumeState({ week: 24, infiltration: 120, mobility: 1, biochar: true, vegetation: true, lime: true }),
   ]) {
-    const outer = plumeShell(scenario, 0);
-    const inner = plumeShell(scenario, .77);
-    assert.ok([...outer, ...inner].every(({ x, y, z }) =>
-      x >= 0 && x <= terrain.width && y >= 0 && y <= terrain.depth && z >= 0 && z <= terrain.breadth));
-    const xs = outer.map(p => p.x);
-    assert.ok(Math.abs(Math.max(...xs) - Math.min(...xs) - scenario.length) < 1e-6);
-    assert.ok(Math.abs(Math.max(...outer.map(p => p.y)) - scenario.depth) < 1e-6);
+    const { min, max } = createPlumeField(scenario);
+    assert.ok(min.x >= 0 && min.y >= 0 && min.z >= 0);
+    assert.ok(max.x <= terrain.width && max.y <= terrain.depth && max.z <= terrain.breadth);
+    assert.ok(Math.abs(max.x - min.x - scenario.length) < 1e-6);
+    assert.equal(max.y, scenario.depth);
   }
+});
+
+test('the plume has optical density through its interior and stays transparent outside it', () => {
+  const field = createPlumeField(plumeState({ week: 15 }));
+  const section = Math.floor(field.samples.length / 8) * 4;
+  const x = (field.min.x + field.max.x) / 2;
+  const y = field.samples[section];
+  const z = field.samples[section + 2];
+  const rgba = (origin, direction) => {
+    const result = new Uint8ClampedArray(4);
+    tracePlume(field, origin, direction, result, 0);
+    return result;
+  };
+
+  assert.ok(rgba({ x, y, z: -1 }, { x: 0, y: 0, z: 1 })[3] > 0);
+  assert.ok(rgba({ x: -1, y, z }, { x: 1, y: 0, z: 0 })[3] > 0);
+  assert.ok(rgba({ x, y: -1, z }, { x: 0, y: 1, z: 0 })[3] > 0);
+  assert.equal(rgba({ x, y: field.max.y + .02, z: -1 }, { x: 0, y: 0, z: 1 })[3], 0);
+  assert.equal(rgba({ x, y: -1, z: terrain.breadth - .01 }, { x: 0, y: 1, z: 0 })[3], 0);
 });
 
 test('three remediation methods reduce risk but do not hide a plume close to groundwater', () => {

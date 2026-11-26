@@ -1,5 +1,5 @@
 import { clamp, plumeState } from './plume-model.js';
-import { createTerrainRenderer } from './plume-renderer.js';
+import { createTerrainRenderer } from './plume-renderer.js?v=volume-1';
 
 const byId = (id) => document.getElementById(id);
 const canvas = byId('plumeCanvas');
@@ -26,7 +26,7 @@ const metrics = {
   risk: byId('riskMetric'),
 };
 
-const initialCamera = { yaw: .31, pitch: .35, zoom: 1 };
+const initialCamera = { yaw: -.31, pitch: .35, zoom: 1 };
 const camera = { ...initialCamera };
 const pointers = new Map();
 const numbers = [0, 1, 2].map(digits => new Intl.NumberFormat('es-CO', {
