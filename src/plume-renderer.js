@@ -1,8 +1,30 @@
-import { clamp } from './plume-model.js';
-import { createPlumeField, createPlumePainter, source, terrain } from './plume-volume.js';
+import { clamp } from './plume-model.js?v=depth-risk-1';
+import { createPlumeField, createPlumePainter, source, terrain } from './plume-volume.js?v=depth-risk-1';
 
 const heightScale = 0.68;
 const grassColors = ['#535b35', '#677940', '#818b46', '#9aa055', '#b2ae6b'];
+const waterRiskStops = [
+  [0, [39, 139, 232]],
+  [.38, [55, 116, 215]],
+  [.60, [137, 96, 194]],
+  [.80, [199, 74, 133]],
+  [1, [229, 55, 59]],
+];
+
+export function groundwaterRiskColor(riskScore) {
+  const score = clamp(riskScore, 0, 1);
+  const upper = waterRiskStops.findIndex(([stop]) => score <= stop);
+  if (upper === 0) return waterRiskStops[0][1];
+  const [lowerStop, from] = waterRiskStops[upper - 1];
+  const [upperStop, to] = waterRiskStops[upper];
+  const progress = (score - lowerStop) / (upperStop - lowerStop);
+  return from.map((channel, index) => Math.round(channel + (to[index] - channel) * progress));
+}
+
+function waterTint(color, light, alpha = 1) {
+  const channels = color.map(channel => Math.min(255, Math.round(channel * light)));
+  return 'rgba(' + channels.join(', ') + ', ' + alpha + ')';
+}
 
 function randomSequence(seed) {
   return () => {
@@ -199,16 +221,16 @@ export function createTerrainRenderer(canvas, invalidate) {
     ctx.fillRect(0, 0, face.w, depth);
   }
 
-  function groundwater(face, waterDepth, front) {
+  function groundwater(face, waterDepth, color, front) {
     const water = ctx.createLinearGradient(0, waterDepth, 0, depth);
-    water.addColorStop(0, '#227b87ae');
-    water.addColorStop(.35, '#205f70b8');
-    water.addColorStop(1, '#244a57bd');
+    water.addColorStop(0, waterTint(color, 1, .87));
+    water.addColorStop(.35, waterTint(color, .80, .87));
+    water.addColorStop(1, waterTint(color, .55, .86));
     ctx.fillStyle = water;
     ctx.fillRect(0, waterDepth, face.w, depth - waterDepth);
     if (!front) return;
     ctx.globalAlpha = .85;
-    ctx.strokeStyle = '#9dd4d9cf';
+    ctx.strokeStyle = waterTint(color, 1.38, .97);
     ctx.lineWidth = .022;
     ctx.beginPath();
     ctx.moveTo(0, waterDepth);
@@ -299,12 +321,12 @@ export function createTerrainRenderer(canvas, invalidate) {
     chips(state);
   }
 
-  function walls(facets, project, state, front) {
+  function walls(facets, project, state, color, front) {
     for (const face of facets) {
       mapFace(face, project, () => {
         ctx.globalAlpha = front ? .34 : .68;
         strata(face);
-        groundwater(face, state.groundwaterDepth, front);
+        groundwater(face, state.groundwaterDepth, color, front);
         if (!front) return;
         ctx.globalAlpha = 1;
         if (state.remedies.vegetation) roots(face);
@@ -390,25 +412,26 @@ export function createTerrainRenderer(canvas, invalidate) {
     }
     const view = viewpoint(camera, width, height);
     const { project, visible } = view;
+    const waterColor = groundwaterRiskColor(state.riskScore);
     backdrop(width, height, project);
     mapFace(base, project, () => {
-      ctx.fillStyle = '#234553c4';
+      ctx.fillStyle = waterTint(waterColor, .37, .76);
       ctx.fillRect(0, 0, terrainWidth, breadth);
     });
-    walls(view.rear, project, state, false);
+    walls(view.rear, project, state, waterColor, false);
     ctx.save();
     ctx.beginPath();
     path(silhouette(vertices.map(project)));
     ctx.clip();
     paintPlume(ctx, view, field, width, height);
     ctx.restore();
-    walls(visible, project, state, true);
+    walls(visible, project, state, waterColor, true);
     mapFace(surface, project, () => topsoil(state));
     vegetation(view, state.remedies.vegetation);
 
     const waterFace = view.clearest;
     const waterPoint = project(onFace(waterFace, waterFace.w * .76, state.groundwaterDepth));
     callout(project(point(source.x, 0, source.z)), 'Origen · Cd', width, height, true, '#ecaa52');
-    callout(waterPoint, 'Nivel freático · ' + waterLabel, width, height, false, '#60bdc8');
+    callout(waterPoint, 'Nivel freático · ' + waterLabel, width, height, false, waterTint(waterColor, 1.28));
   };
 }

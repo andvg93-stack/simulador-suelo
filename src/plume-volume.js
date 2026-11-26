@@ -13,7 +13,7 @@ export function createPlumeField(state) {
   for (let section = 0; section <= sections; section += 1) {
     const t = section / sections;
     const envelope = Math.sin(Math.PI * t) ** .58;
-    const bottom = .06 + (state.depth - .06) * t ** .73;
+    const bottom = .06 + (state.depth - .06) * Math.sin(t * Math.PI / 2) ** .79;
     const topLimit = .022 + (state.depth - .022) * .28 * t;
     const halfHeight = Math.min(bottom - topLimit, (state.depth * .83 + .12) * envelope) / 2;
     const offset = 4 * section;
