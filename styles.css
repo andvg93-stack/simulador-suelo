@@ -55,6 +55,17 @@ body {
   align-items: center;
 }
 
+.plume-link {
+  padding: 0.44rem 0.68rem;
+  border: 1px solid #c0cfdd;
+  border-radius: 10px;
+  background: #f5f8fb;
+  color: #21374b;
+  text-decoration: none;
+}
+
+.plume-link:hover { background: #e9f0f6; }
+
 .toolbar-week {
   display: flex;
   align-items: center;

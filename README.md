@@ -10,6 +10,8 @@ npm start
 
 This starts a local static server; open http://localhost:5173 in your browser.
 
+Open **3D view** from the simulator toolbar to explore the terrain cut, rotate the camera, and see how each treatment changes the scene and the plume over 24 weeks.
+
 ## What it includes
 
 - 4-zone layout:
